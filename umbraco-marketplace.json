@@ -4,11 +4,11 @@
       "Name": "Justin Neville",
       "ImageUrl": "https://github.com/justin-nevitech.png"
     },
-    "Category": "",
-    "Description": "",
+    "Category": "Developer Tools",
+    "Description": "Adds AI-powered log analysis to the Umbraco backoffice log viewer. Analyse any log entry with one click using your configured AI provider via Umbraco.AI.",
     "LicenseTypes": [ "Free" ],
     "IssueTrackerUrl": "https://github.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/issues",
     "PackageType": "Package",
-    "Tags": [],
+    "Tags": ["AI", "Logging", "Developer Tools"],
     "Title": "AI.Log Analyser "
   }
