@@ -10,5 +10,11 @@
     "IssueTrackerUrl": "https://github.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/issues",
     "PackageType": "Package",
     "Tags": ["AI", "Logging", "Developer Tools"],
+    "Screenshots": [
+      {
+        "Url": "https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png",
+        "Caption": "AI Log Analysis modal showing summary, cause and recommended action"
+      }
+    ],
     "Title": "AI.Log Analyser "
   }
