@@ -4,6 +4,7 @@ export interface LogAiSummaryModalData {
   timestamp: string;
   level: string;
   message: string;
+  messageTemplate?: string;
   exception?: string;
   properties?: string;
 }
@@ -13,7 +14,7 @@ export const LOG_AI_SUMMARY_MODAL = new UmbModalToken<LogAiSummaryModalData, und
   {
     modal: {
       type: 'dialog',
-      size: 'small',
+      size: 'medium',
     },
   },
 );

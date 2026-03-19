@@ -7,11 +7,6 @@ using Umbraco.Cms.Core.Services;
 
 namespace AI.LogAnalyser.Services;
 
-public interface ISystemDiagnosticsProvider
-{
-    string GetContext();
-}
-
 public class SystemDiagnosticsProvider : ISystemDiagnosticsProvider
 {
     private readonly Lazy<string> _context;
@@ -58,7 +53,6 @@ public class SystemDiagnosticsProvider : ISystemDiagnosticsProvider
             .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        // Trim informational version to just semver (strip +hash metadata)
         foreach (var (name, version) in assemblies)
         {
             var ver = version.Contains('+') ? version[..version.IndexOf('+')] : version;

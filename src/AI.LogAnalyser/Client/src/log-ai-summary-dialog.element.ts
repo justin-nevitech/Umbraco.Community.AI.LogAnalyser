@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { UmbModalBaseElement } from '@umbraco-cms/backoffice/modal';
 import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
+import { marked } from '@umbraco-cms/backoffice/external/marked';
 import type { LogAiSummaryModalData } from './log-ai-summary.modal-token.js';
 
 function getLevelColor(level: string): string {
@@ -23,27 +24,15 @@ function getLevelColor(level: string): string {
   }
 }
 
-/**
- * Converts basic markdown to HTML for rendering AI responses.
- */
-function markdownToHtml(md: string): string {
-  return md
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-    .replace(/<\/ul>\s*<ul>/g, '')
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-    .replace(/^(.+)$/, '<p>$1</p>');
-}
+// Configure marked: convert single newlines to <br>, open links in new tab
+marked.use({
+  breaks: true,
+  renderer: {
+    link({ href, text }) {
+      return `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+    },
+  },
+});
 
 @customElement('log-ai-summary-dialog')
 export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAiSummaryModalData, undefined> {
@@ -132,6 +121,37 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
       font-size: 12px;
     }
 
+    .summary-content pre {
+      background: var(--uui-color-surface-alt, #f4f3f5);
+      border-radius: 4px;
+      padding: 12px;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+
+    .summary-content pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    .summary-content a {
+      color: var(--uui-color-interactive, #1b264f);
+      text-decoration: underline;
+    }
+
+    .summary-content a:hover {
+      color: var(--uui-color-interactive-emphasis, #303f9f);
+    }
+
+    .summary-content ol {
+      margin: 4px 0;
+      padding-left: 20px;
+    }
+
     .summary-content p {
       margin: 0 0 8px;
     }
@@ -164,14 +184,6 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
 
   override connectedCallback() {
     super.connectedCallback();
-
-    // The parent uui-dialog has a hardcoded max-width of 580px.
-    // Override it so our wider layout can take effect.
-    const dialog = this.closest('uui-dialog') as HTMLElement | null;
-    if (dialog) {
-      dialog.style.maxWidth = '800px';
-    }
-
     this._fetchSummary();
   }
 
@@ -195,6 +207,7 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
             level: this.data?.level,
             timestamp: this.data?.timestamp,
             message: this.data?.message,
+            messageTemplate: this.data?.messageTemplate || undefined,
             exception: this.data?.exception || undefined,
             properties: this.data?.properties || undefined,
           }),
@@ -263,7 +276,7 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
             ? html`<div class="error">${this._error}</div>`
             : html`
                 <div class="summary-content">
-                  ${unsafeHTML(markdownToHtml(this._summary))}
+                  ${unsafeHTML(marked.parse(this._summary) as string)}
                     </div>
                   `}
           </div>

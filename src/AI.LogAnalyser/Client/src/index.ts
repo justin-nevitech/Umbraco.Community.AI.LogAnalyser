@@ -22,9 +22,16 @@ interface LogData {
   timestamp: string;
   level: string;
   message: string;
+  messageTemplate?: string;
   exception?: string;
   properties?: string;
 }
+
+const CELL_STYLE =
+  'flex: 0 0 4ch; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; justify-content: center; margin-left: auto;';
+
+const AI_ICON_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" viewBox="0 0 24 24"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72M14 7l3 3M5 6v4M19 14v4M10 2v2M7 8H3M21 16h-4M11 3H9"/></svg>';
 
 /**
  * Enhances the Umbraco log viewer with an AI analysis button on each log row.
@@ -35,7 +42,7 @@ interface LogData {
  */
 class LogViewerEnhancer {
   private _enhancedMessages = new WeakSet<Element>();
-  private _lastHeaderElement: Element | null = null;
+  private _cachedMessagesList: Element | null = null;
   private _host: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE | undefined;
   private _umbHost: Parameters<UmbEntryPointOnInit>[0];
 
@@ -53,10 +60,19 @@ class LogViewerEnhancer {
   private _tick() {
     if (!this._isLogViewerPage()) return;
 
-    const messagesList = this._findElement(
-      'umb-log-viewer-messages-list',
-      document.body
-    );
+    // Re-use cached element if it's still in the DOM
+    if (this._cachedMessagesList && !this._cachedMessagesList.isConnected) {
+      this._cachedMessagesList = null;
+    }
+
+    if (!this._cachedMessagesList) {
+      this._cachedMessagesList = this._findElement(
+        'umb-log-viewer-messages-list',
+        document.body
+      );
+    }
+
+    const messagesList = this._cachedMessagesList;
     if (!messagesList?.shadowRoot) return;
 
     this._enhanceHeader(messagesList.shadowRoot);
@@ -70,19 +86,12 @@ class LogViewerEnhancer {
   private _enhanceHeader(shadowRoot: ShadowRoot) {
     const header = shadowRoot.querySelector('#header');
     if (!header) return;
-
-    // If the header element changed (e.g. re-render), reset tracking
-    if (this._lastHeaderElement !== header) {
-      this._lastHeaderElement = header;
-    }
-
     if (header.querySelector('.log-ai-header')) return;
 
     const aiHeader = document.createElement('div');
     aiHeader.className = 'log-ai-header';
     aiHeader.textContent = 'AI';
-    aiHeader.style.cssText =
-      'flex: 0 0 4ch; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; justify-content: center; font-weight: 600; margin-left: auto;';
+    aiHeader.style.cssText = CELL_STYLE + ' font-weight: 600;';
     header.appendChild(aiHeader);
     console.log('Log AI Summary: Header column added');
   }
@@ -105,8 +114,7 @@ class LogViewerEnhancer {
 
       const aiCell = document.createElement('div');
       aiCell.className = 'log-ai-cell';
-      aiCell.style.cssText =
-        'flex: 0 0 4ch; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; justify-content: center; margin-left: auto;';
+      aiCell.style.cssText = CELL_STYLE;
 
       const button = document.createElement('button');
       button.type = 'button';
@@ -114,8 +122,7 @@ class LogViewerEnhancer {
       button.setAttribute('aria-label', 'Analyse with AI');
       button.style.cssText =
         'cursor:pointer; background:none; border:none; padding:4px; display:flex; align-items:center; color:inherit;';
-      button.innerHTML =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" viewBox="0 0 24 24"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72M14 7l3 3M5 6v4M19 14v4M10 2v2M7 8H3M21 16h-4M11 3H9"/></svg>';
+      button.innerHTML = AI_ICON_SVG;
 
       button.addEventListener('click', (e: Event) => {
         e.stopPropagation();
@@ -133,6 +140,7 @@ class LogViewerEnhancer {
       timestamp: string;
       level: string;
       renderedMessage: string;
+      messageTemplate: string;
       exception: string;
       properties: Array<{ name: string; value: string }>;
     };
@@ -145,6 +153,7 @@ class LogViewerEnhancer {
       timestamp: el.timestamp || '',
       level: el.level || '',
       message: el.renderedMessage || '',
+      messageTemplate: el.messageTemplate || undefined,
       exception: el.exception || undefined,
       properties: propsStr || undefined,
     };
@@ -161,6 +170,7 @@ class LogViewerEnhancer {
         level: logData.level,
         timestamp: logData.timestamp,
         message: logData.message,
+        messageTemplate: logData.messageTemplate,
         exception: logData.exception,
         properties: logData.properties,
       },
