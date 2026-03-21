@@ -29,7 +29,9 @@ marked.use({
   breaks: true,
   renderer: {
     link({ href, text }) {
-      return `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
+      const safeHref = (href ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+      if (/^javascript:/i.test(safeHref)) return text ?? '';
+      return `<a href="${safeHref}" target="_blank" rel="noopener">${text}</a>`;
     },
   },
 });
@@ -182,18 +184,33 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
   @state() private _loading = true;
   @state() private _error = '';
 
+  private _abortController?: AbortController;
+
   override connectedCallback() {
     super.connectedCallback();
     this._fetchSummary();
   }
 
-  private async _fetchSummary() {
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this._abortController?.abort();
+  }
+
+  private _fetchSummary = async () => {
+    this._abortController?.abort();
+    this._abortController = new AbortController();
+
     this._loading = true;
     this._error = '';
 
     try {
       const authContext = await this.getContext(UMB_AUTH_CONTEXT);
-      const token = await authContext!.getLatestToken();
+      if (!authContext) {
+        this._error = 'Authentication context not available.';
+        this._loading = false;
+        return;
+      }
+      const token = await authContext.getLatestToken();
 
       const response = await fetch(
         '/umbraco/ailoganalyser/api/v1.0/analyse',
@@ -211,6 +228,7 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
             exception: this.data?.exception || undefined,
             properties: this.data?.properties || undefined,
           }),
+          signal: this._abortController.signal,
         },
       );
 
@@ -224,12 +242,13 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
       const result = await response.json();
       this._summary = result.summary;
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       this._error =
         err instanceof Error ? err.message : 'Failed to get AI summary.';
     } finally {
       this._loading = false;
     }
-  }
+  };
 
   private _close() {
     this.modalContext?.reject();
@@ -276,7 +295,7 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
             ? html`<div class="error">${this._error}</div>`
             : html`
                 <div class="summary-content">
-                  ${unsafeHTML(marked.parse(this._summary) as string)}
+                  ${unsafeHTML(marked.parse(this._summary, { async: false }) as string)}
                     </div>
                   `}
           </div>

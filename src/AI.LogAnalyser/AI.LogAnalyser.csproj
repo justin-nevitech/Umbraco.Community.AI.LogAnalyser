@@ -9,7 +9,7 @@
   <PropertyGroup>
     <Product>Umbraco.Community.AI.LogAnalyser</Product>
     <PackageId>Umbraco.Community.AI.LogAnalyser</PackageId>
-    <Title>AI.Log Analyser </Title>
+    <Title>AI Log Analyser</Title>
     <Description>Adds AI-powered log analysis to the Umbraco backoffice log viewer. Analyse any log entry with one click using your configured AI provider via Umbraco.AI.</Description>
     <PackageTags>umbraco;umbraco-marketplace</PackageTags>
     <Authors>Justin Neville</Authors>
@@ -19,7 +19,7 @@
     <PackageReadmeFile>README_nuget.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageIcon></PackageIcon>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,6 +40,10 @@
   
   <ItemGroup>
     <None Include="..\..\docs\README_nuget.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\docs\icon.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
