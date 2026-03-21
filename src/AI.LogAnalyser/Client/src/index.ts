@@ -4,8 +4,6 @@ import { UMB_MODAL_MANAGER_CONTEXT } from '@umbraco-cms/backoffice/modal';
 import { LOG_AI_SUMMARY_MODAL } from './log-ai-summary.modal-token.js';
 
 export const onInit: UmbEntryPointOnInit = (host, extensionRegistry) => {
-  console.log('Log AI Summary: Entry point initialized');
-
   const modalManifest: ManifestModal = {
     type: 'modal',
     alias: 'LogAiSummary.Modal',
@@ -45,6 +43,7 @@ class LogViewerEnhancer {
   private _cachedMessagesList: Element | null = null;
   private _host: typeof UMB_MODAL_MANAGER_CONTEXT.TYPE | undefined;
   private _umbHost: Parameters<UmbEntryPointOnInit>[0];
+  private _intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor(host: Parameters<UmbEntryPointOnInit>[0]) {
     this._umbHost = host;
@@ -54,7 +53,15 @@ class LogViewerEnhancer {
   }
 
   start() {
-    window.setInterval(() => this._tick(), 1000);
+    this.stop();
+    this._intervalId = window.setInterval(() => this._tick(), 1000);
+  }
+
+  stop() {
+    if (this._intervalId !== null) {
+      window.clearInterval(this._intervalId);
+      this._intervalId = null;
+    }
   }
 
   private _tick() {
@@ -93,7 +100,6 @@ class LogViewerEnhancer {
     aiHeader.textContent = 'AI';
     aiHeader.style.cssText = CELL_STYLE + ' font-weight: 600;';
     header.appendChild(aiHeader);
-    console.log('Log AI Summary: Header column added');
   }
 
   private _enhanceMessages(shadowRoot: ShadowRoot) {

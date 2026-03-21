@@ -9,6 +9,7 @@ using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Api.Management.OpenApi;
 using Umbraco.Cms.Api.Common.OpenApi;
+using AI.LogAnalyser.Models;
 using AI.LogAnalyser.Services;
 
 namespace AI.LogAnalyser.Composers
@@ -17,8 +18,12 @@ namespace AI.LogAnalyser.Composers
     {
         public void Compose(IUmbracoBuilder builder)
         {
+            builder.Services.Configure<LogContextSettings>(
+                builder.Config.GetSection(LogContextSettings.SectionName));
+
             builder.Services.AddSingleton<IOperationIdHandler, CustomOperationHandler>();
             builder.Services.AddSingleton<ISystemDiagnosticsProvider, SystemDiagnosticsProvider>();
+            builder.Services.AddTransient<ILogContextProvider, LogContextProvider>();
 
             builder.Services.Configure<SwaggerGenOptions>(opt =>
             {

@@ -1,5 +1,5 @@
-import { nothing as z, html as f, css as ht } from "@umbraco-cms/backoffice/external/lit";
-import { UmbModalBaseElement as lt } from "@umbraco-cms/backoffice/modal";
+import { nothing as z, html as $, css as lt } from "@umbraco-cms/backoffice/external/lit";
+import { UmbModalBaseElement as ht } from "@umbraco-cms/backoffice/modal";
 import { UMB_AUTH_CONTEXT as ct } from "@umbraco-cms/backoffice/auth";
 import { marked as st } from "@umbraco-cms/backoffice/external/marked";
 const dt = (r) => (t, e) => {
@@ -7,7 +7,7 @@ const dt = (r) => (t, e) => {
     customElements.define(r, t);
   }) : customElements.define(r, t);
 };
-const U = globalThis, I = U.ShadowRoot && (U.ShadyCSS === void 0 || U.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, it = /* @__PURE__ */ Symbol(), V = /* @__PURE__ */ new WeakMap();
+const U = globalThis, D = U.ShadowRoot && (U.ShadyCSS === void 0 || U.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, it = /* @__PURE__ */ Symbol(), V = /* @__PURE__ */ new WeakMap();
 let ut = class {
   constructor(t, e, s) {
     if (this._$cssResult$ = !0, s !== it) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -16,7 +16,7 @@ let ut = class {
   get styleSheet() {
     let t = this.o;
     const e = this.t;
-    if (I && t === void 0) {
+    if (D && t === void 0) {
       const s = e !== void 0 && e.length === 1;
       s && (t = V.get(e)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), s && V.set(e, t));
     }
@@ -26,18 +26,18 @@ let ut = class {
     return this.cssText;
   }
 };
-const pt = (r) => new ut(typeof r == "string" ? r : r + "", void 0, it), $t = (r, t) => {
-  if (I) r.adoptedStyleSheets = t.map((e) => e instanceof CSSStyleSheet ? e : e.styleSheet);
+const pt = (r) => new ut(typeof r == "string" ? r : r + "", void 0, it), ft = (r, t) => {
+  if (D) r.adoptedStyleSheets = t.map((e) => e instanceof CSSStyleSheet ? e : e.styleSheet);
   else for (const e of t) {
     const s = document.createElement("style"), i = U.litNonce;
     i !== void 0 && s.setAttribute("nonce", i), s.textContent = e.cssText, r.appendChild(s);
   }
-}, J = I ? (r) => r : (r) => r instanceof CSSStyleSheet ? ((t) => {
+}, J = D ? (r) => r : (r) => r instanceof CSSStyleSheet ? ((t) => {
   let e = "";
   for (const s of t.cssRules) e += s.cssText;
   return pt(e);
 })(r) : r;
-const { is: mt, defineProperty: ft, getOwnPropertyDescriptor: _t, getOwnPropertyNames: gt, getOwnPropertySymbols: yt, getPrototypeOf: vt } = Object, H = globalThis, Z = H.trustedTypes, At = Z ? Z.emptyScript : "", bt = H.reactiveElementPolyfillSupport, E = (r, t) => r, T = { toAttribute(r, t) {
+const { is: mt, defineProperty: $t, getOwnPropertyDescriptor: _t, getOwnPropertyNames: gt, getOwnPropertySymbols: yt, getPrototypeOf: vt } = Object, H = globalThis, Z = H.trustedTypes, At = Z ? Z.emptyScript : "", bt = H.reactiveElementPolyfillSupport, w = (r, t) => r, O = { toAttribute(r, t) {
   switch (t) {
     case Boolean:
       r = r ? At : null;
@@ -65,7 +65,7 @@ const { is: mt, defineProperty: ft, getOwnPropertyDescriptor: _t, getOwnProperty
       }
   }
   return e;
-} }, D = (r, t) => !mt(r, t), F = { attribute: !0, type: String, converter: T, reflect: !1, useDefault: !1, hasChanged: D };
+} }, I = (r, t) => !mt(r, t), F = { attribute: !0, type: String, converter: O, reflect: !1, useDefault: !1, hasChanged: I };
 Symbol.metadata ??= /* @__PURE__ */ Symbol("metadata"), H.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
 let x = class extends HTMLElement {
   static addInitializer(t) {
@@ -77,7 +77,7 @@ let x = class extends HTMLElement {
   static createProperty(t, e = F) {
     if (e.state && (e.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(t) && ((e = Object.create(e)).wrapped = !0), this.elementProperties.set(t, e), !e.noAccessor) {
       const s = /* @__PURE__ */ Symbol(), i = this.getPropertyDescriptor(t, s, e);
-      i !== void 0 && ft(this.prototype, t, i);
+      i !== void 0 && $t(this.prototype, t, i);
     }
   }
   static getPropertyDescriptor(t, e, s) {
@@ -87,21 +87,21 @@ let x = class extends HTMLElement {
       this[e] = n;
     } };
     return { get: i, set(n) {
-      const h = i?.call(this);
-      o?.call(this, n), this.requestUpdate(t, h, s);
+      const l = i?.call(this);
+      o?.call(this, n), this.requestUpdate(t, l, s);
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(t) {
     return this.elementProperties.get(t) ?? F;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(E("elementProperties"))) return;
+    if (this.hasOwnProperty(w("elementProperties"))) return;
     const t = vt(this);
     t.finalize(), t.l !== void 0 && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(E("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(E("properties"))) {
+    if (this.hasOwnProperty(w("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(w("properties"))) {
       const e = this.properties, s = [...gt(e), ...yt(e)];
       for (const i of s) this.createProperty(i, e[i]);
     }
@@ -148,7 +148,7 @@ let x = class extends HTMLElement {
   }
   createRenderRoot() {
     const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return $t(t, this.constructor.elementStyles), t;
+    return ft(t, this.constructor.elementStyles), t;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((t) => t.hostConnected?.());
@@ -164,23 +164,23 @@ let x = class extends HTMLElement {
   _$ET(t, e) {
     const s = this.constructor.elementProperties.get(t), i = this.constructor._$Eu(t, s);
     if (i !== void 0 && s.reflect === !0) {
-      const o = (s.converter?.toAttribute !== void 0 ? s.converter : T).toAttribute(e, s.type);
+      const o = (s.converter?.toAttribute !== void 0 ? s.converter : O).toAttribute(e, s.type);
       this._$Em = t, o == null ? this.removeAttribute(i) : this.setAttribute(i, o), this._$Em = null;
     }
   }
   _$AK(t, e) {
     const s = this.constructor, i = s._$Eh.get(t);
     if (i !== void 0 && this._$Em !== i) {
-      const o = s.getPropertyOptions(i), n = typeof o.converter == "function" ? { fromAttribute: o.converter } : o.converter?.fromAttribute !== void 0 ? o.converter : T;
+      const o = s.getPropertyOptions(i), n = typeof o.converter == "function" ? { fromAttribute: o.converter } : o.converter?.fromAttribute !== void 0 ? o.converter : O;
       this._$Em = i;
-      const h = n.fromAttribute(e, o.type);
-      this[i] = h ?? this._$Ej?.get(i) ?? h, this._$Em = null;
+      const l = n.fromAttribute(e, o.type);
+      this[i] = l ?? this._$Ej?.get(i) ?? l, this._$Em = null;
     }
   }
   requestUpdate(t, e, s, i = !1, o) {
     if (t !== void 0) {
       const n = this.constructor;
-      if (i === !1 && (o = this[t]), s ??= n.getPropertyOptions(t), !((s.hasChanged ?? D)(o, e) || s.useDefault && s.reflect && o === this._$Ej?.get(t) && !this.hasAttribute(n._$Eu(t, s)))) return;
+      if (i === !1 && (o = this[t]), s ??= n.getPropertyOptions(t), !((s.hasChanged ?? I)(o, e) || s.useDefault && s.reflect && o === this._$Ej?.get(t) && !this.hasAttribute(n._$Eu(t, s)))) return;
       this.C(t, e, s);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
@@ -210,8 +210,8 @@ let x = class extends HTMLElement {
       }
       const s = this.constructor.elementProperties;
       if (s.size > 0) for (const [i, o] of s) {
-        const { wrapped: n } = o, h = this[i];
-        n !== !0 || this._$AL.has(i) || h === void 0 || this.C(i, void 0, o, h);
+        const { wrapped: n } = o, l = this[i];
+        n !== !0 || this._$AL.has(i) || l === void 0 || this.C(i, void 0, o, l);
       }
     }
     let t = !1;
@@ -248,39 +248,39 @@ let x = class extends HTMLElement {
   firstUpdated(t) {
   }
 };
-x.elementStyles = [], x.shadowRootOptions = { mode: "open" }, x[E("elementProperties")] = /* @__PURE__ */ new Map(), x[E("finalized")] = /* @__PURE__ */ new Map(), bt?.({ ReactiveElement: x }), (H.reactiveElementVersions ??= []).push("2.1.2");
-const xt = { attribute: !0, type: String, converter: T, reflect: !1, hasChanged: D }, wt = (r = xt, t, e) => {
+x.elementStyles = [], x.shadowRootOptions = { mode: "open" }, x[w("elementProperties")] = /* @__PURE__ */ new Map(), x[w("finalized")] = /* @__PURE__ */ new Map(), bt?.({ ReactiveElement: x }), (H.reactiveElementVersions ??= []).push("2.1.2");
+const xt = { attribute: !0, type: String, converter: O, reflect: !1, hasChanged: I }, Et = (r = xt, t, e) => {
   const { kind: s, metadata: i } = e;
   let o = globalThis.litPropertyMetadata.get(i);
   if (o === void 0 && globalThis.litPropertyMetadata.set(i, o = /* @__PURE__ */ new Map()), s === "setter" && ((r = Object.create(r)).wrapped = !0), o.set(e.name, r), s === "accessor") {
     const { name: n } = e;
-    return { set(h) {
+    return { set(l) {
       const a = t.get.call(this);
-      t.set.call(this, h), this.requestUpdate(n, a, r, !0, h);
-    }, init(h) {
-      return h !== void 0 && this.C(n, void 0, r, h), h;
+      t.set.call(this, l), this.requestUpdate(n, a, r, !0, l);
+    }, init(l) {
+      return l !== void 0 && this.C(n, void 0, r, l), l;
     } };
   }
   if (s === "setter") {
     const { name: n } = e;
-    return function(h) {
+    return function(l) {
       const a = this[n];
-      t.call(this, h), this.requestUpdate(n, a, r, !0, h);
+      t.call(this, l), this.requestUpdate(n, a, r, !0, l);
     };
   }
   throw Error("Unsupported decorator location: " + s);
 };
-function Et(r) {
-  return (t, e) => typeof e == "object" ? wt(r, t, e) : ((s, i, o) => {
+function wt(r) {
+  return (t, e) => typeof e == "object" ? Et(r, t, e) : ((s, i, o) => {
     const n = i.hasOwnProperty(o);
     return i.constructor.createProperty(o, s), n ? Object.getOwnPropertyDescriptor(i, o) : void 0;
   })(r, t, e);
 }
 function B(r) {
-  return Et({ ...r, state: !0, attribute: !1 });
+  return wt({ ...r, state: !0, attribute: !1 });
 }
-const q = globalThis, K = (r) => r, O = q.trustedTypes, X = O ? O.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, rt = "$lit$", m = `lit$${Math.random().toFixed(9).slice(2)}$`, ot = "?" + m, St = `<${ot}>`, y = document, M = () => y.createComment(""), S = (r) => r === null || typeof r != "object" && typeof r != "function", W = Array.isArray, Ct = (r) => W(r) || typeof r?.[Symbol.iterator] == "function", j = `[ 	
-\f\r]`, w = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, G = /-->/g, Q = />/g, _ = RegExp(`>|${j}(?:([^\\s"'>=/]+)(${j}*=${j}*(?:[^ 	
+const q = globalThis, K = (r) => r, T = q.trustedTypes, X = T ? T.createPolicy("lit-html", { createHTML: (r) => r }) : void 0, rt = "$lit$", m = `lit$${Math.random().toFixed(9).slice(2)}$`, ot = "?" + m, St = `<${ot}>`, y = document, M = () => y.createComment(""), S = (r) => r === null || typeof r != "object" && typeof r != "function", W = Array.isArray, Ct = (r) => W(r) || typeof r?.[Symbol.iterator] == "function", j = `[ 	
+\f\r]`, E = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, G = /-->/g, Q = />/g, _ = RegExp(`>|${j}(?:([^\\s"'>=/]+)(${j}*=${j}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g"), Y = /'/g, tt = /"/g, nt = /^(?:script|style|textarea|title)$/i, v = /* @__PURE__ */ Symbol.for("lit-noChange"), c = /* @__PURE__ */ Symbol.for("lit-nothing"), et = /* @__PURE__ */ new WeakMap(), g = y.createTreeWalker(y, 129);
 function at(r, t) {
   if (!W(r) || !r.hasOwnProperty("raw")) throw Error("invalid template strings array");
@@ -288,13 +288,13 @@ function at(r, t) {
 }
 const Pt = (r, t) => {
   const e = r.length - 1, s = [];
-  let i, o = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", n = w;
-  for (let h = 0; h < e; h++) {
-    const a = r[h];
-    let d, u, l = -1, p = 0;
-    for (; p < a.length && (n.lastIndex = p, u = n.exec(a), u !== null); ) p = n.lastIndex, n === w ? u[1] === "!--" ? n = G : u[1] !== void 0 ? n = Q : u[2] !== void 0 ? (nt.test(u[2]) && (i = RegExp("</" + u[2], "g")), n = _) : u[3] !== void 0 && (n = _) : n === _ ? u[0] === ">" ? (n = i ?? w, l = -1) : u[1] === void 0 ? l = -2 : (l = n.lastIndex - u[2].length, d = u[1], n = u[3] === void 0 ? _ : u[3] === '"' ? tt : Y) : n === tt || n === Y ? n = _ : n === G || n === Q ? n = w : (n = _, i = void 0);
-    const $ = n === _ && r[h + 1].startsWith("/>") ? " " : "";
-    o += n === w ? a + St : l >= 0 ? (s.push(d), a.slice(0, l) + rt + a.slice(l) + m + $) : a + m + (l === -2 ? h : $);
+  let i, o = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", n = E;
+  for (let l = 0; l < e; l++) {
+    const a = r[l];
+    let d, u, h = -1, p = 0;
+    for (; p < a.length && (n.lastIndex = p, u = n.exec(a), u !== null); ) p = n.lastIndex, n === E ? u[1] === "!--" ? n = G : u[1] !== void 0 ? n = Q : u[2] !== void 0 ? (nt.test(u[2]) && (i = RegExp("</" + u[2], "g")), n = _) : u[3] !== void 0 && (n = _) : n === _ ? u[0] === ">" ? (n = i ?? E, h = -1) : u[1] === void 0 ? h = -2 : (h = n.lastIndex - u[2].length, d = u[1], n = u[3] === void 0 ? _ : u[3] === '"' ? tt : Y) : n === tt || n === Y ? n = _ : n === G || n === Q ? n = E : (n = _, i = void 0);
+    const f = n === _ && r[l + 1].startsWith("/>") ? " " : "";
+    o += n === E ? a + St : h >= 0 ? (s.push(d), a.slice(0, h) + rt + a.slice(h) + m + f) : a + m + (h === -2 ? l : f);
   }
   return [at(r, o + (r[e] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), s];
 };
@@ -303,29 +303,29 @@ class C {
     let i;
     this.parts = [];
     let o = 0, n = 0;
-    const h = t.length - 1, a = this.parts, [d, u] = Pt(t, e);
+    const l = t.length - 1, a = this.parts, [d, u] = Pt(t, e);
     if (this.el = C.createElement(d, s), g.currentNode = this.el.content, e === 2 || e === 3) {
-      const l = this.el.content.firstChild;
-      l.replaceWith(...l.childNodes);
+      const h = this.el.content.firstChild;
+      h.replaceWith(...h.childNodes);
     }
-    for (; (i = g.nextNode()) !== null && a.length < h; ) {
+    for (; (i = g.nextNode()) !== null && a.length < l; ) {
       if (i.nodeType === 1) {
-        if (i.hasAttributes()) for (const l of i.getAttributeNames()) if (l.endsWith(rt)) {
-          const p = u[n++], $ = i.getAttribute(l).split(m), P = /([.?@])?(.*)/.exec(p);
-          a.push({ type: 1, index: o, name: P[2], strings: $, ctor: P[1] === "." ? Tt : P[1] === "?" ? Ot : P[1] === "@" ? Mt : k }), i.removeAttribute(l);
-        } else l.startsWith(m) && (a.push({ type: 6, index: o }), i.removeAttribute(l));
+        if (i.hasAttributes()) for (const h of i.getAttributeNames()) if (h.endsWith(rt)) {
+          const p = u[n++], f = i.getAttribute(h).split(m), P = /([.?@])?(.*)/.exec(p);
+          a.push({ type: 1, index: o, name: P[2], strings: f, ctor: P[1] === "." ? Ot : P[1] === "?" ? Tt : P[1] === "@" ? Mt : k }), i.removeAttribute(h);
+        } else h.startsWith(m) && (a.push({ type: 6, index: o }), i.removeAttribute(h));
         if (nt.test(i.tagName)) {
-          const l = i.textContent.split(m), p = l.length - 1;
+          const h = i.textContent.split(m), p = h.length - 1;
           if (p > 0) {
-            i.textContent = O ? O.emptyScript : "";
-            for (let $ = 0; $ < p; $++) i.append(l[$], M()), g.nextNode(), a.push({ type: 2, index: ++o });
-            i.append(l[p], M());
+            i.textContent = T ? T.emptyScript : "";
+            for (let f = 0; f < p; f++) i.append(h[f], M()), g.nextNode(), a.push({ type: 2, index: ++o });
+            i.append(h[p], M());
           }
         }
       } else if (i.nodeType === 8) if (i.data === ot) a.push({ type: 2, index: o });
       else {
-        let l = -1;
-        for (; (l = i.data.indexOf(m, l + 1)) !== -1; ) a.push({ type: 7, index: o }), l += m.length - 1;
+        let h = -1;
+        for (; (h = i.data.indexOf(m, h + 1)) !== -1; ) a.push({ type: 7, index: o }), h += m.length - 1;
       }
       o++;
     }
@@ -354,11 +354,11 @@ class Ut {
   u(t) {
     const { el: { content: e }, parts: s } = this._$AD, i = (t?.creationScope ?? y).importNode(e, !0);
     g.currentNode = i;
-    let o = g.nextNode(), n = 0, h = 0, a = s[0];
+    let o = g.nextNode(), n = 0, l = 0, a = s[0];
     for (; a !== void 0; ) {
       if (n === a.index) {
         let d;
-        a.type === 2 ? d = new N(o, o.nextSibling, this, t) : a.type === 1 ? d = new a.ctor(o, a.name, a.strings, this, t) : a.type === 6 && (d = new Ht(o, this, t)), this._$AV.push(d), a = s[++h];
+        a.type === 2 ? d = new N(o, o.nextSibling, this, t) : a.type === 1 ? d = new a.ctor(o, a.name, a.strings, this, t) : a.type === 6 && (d = new Ht(o, this, t)), this._$AV.push(d), a = s[++l];
       }
       n !== a?.index && (o = g.nextNode(), n++);
     }
@@ -443,9 +443,9 @@ class k {
     let n = !1;
     if (o === void 0) t = A(this, t, e, 0), n = !S(t) || t !== this._$AH && t !== v, n && (this._$AH = t);
     else {
-      const h = t;
+      const l = t;
       let a, d;
-      for (t = o[0], a = 0; a < o.length - 1; a++) d = A(this, h[s + a], e, a), d === v && (d = this._$AH[a]), n ||= !S(d) || d !== this._$AH[a], d === c ? t = c : t !== c && (t += (d ?? "") + o[a + 1]), this._$AH[a] = d;
+      for (t = o[0], a = 0; a < o.length - 1; a++) d = A(this, l[s + a], e, a), d === v && (d = this._$AH[a]), n ||= !S(d) || d !== this._$AH[a], d === c ? t = c : t !== c && (t += (d ?? "") + o[a + 1]), this._$AH[a] = d;
     }
     n && !i && this.j(t);
   }
@@ -453,7 +453,7 @@ class k {
     t === c ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
   }
 }
-class Tt extends k {
+class Ot extends k {
   constructor() {
     super(...arguments), this.type = 3;
   }
@@ -461,7 +461,7 @@ class Tt extends k {
     this.element[this.name] = t === c ? void 0 : t;
   }
 }
-class Ot extends k {
+class Tt extends k {
   constructor() {
     super(...arguments), this.type = 4;
   }
@@ -528,12 +528,12 @@ class L extends zt {
 }
 L.directiveName = "unsafeHTML", L.resultType = 1;
 const jt = Rt(L);
-var Lt = Object.defineProperty, It = Object.getOwnPropertyDescriptor, R = (r, t, e, s) => {
-  for (var i = s > 1 ? void 0 : s ? It(t, e) : t, o = r.length - 1, n; o >= 0; o--)
+var Lt = Object.defineProperty, Dt = Object.getOwnPropertyDescriptor, R = (r, t, e, s) => {
+  for (var i = s > 1 ? void 0 : s ? Dt(t, e) : t, o = r.length - 1, n; o >= 0; o--)
     (n = r[o]) && (i = (s ? n(t, e, i) : n(i)) || i);
   return s && i && Lt(t, e, i), i;
 };
-function Dt(r) {
+function It(r) {
   switch (r.toLowerCase()) {
     case "error":
     case "fatal":
@@ -554,68 +554,78 @@ st.use({
   breaks: !0,
   renderer: {
     link({ href: r, text: t }) {
-      return `<a href="${r}" target="_blank" rel="noopener">${t}</a>`;
+      const e = (r ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+      return /^javascript:/i.test(e) ? t ?? "" : `<a href="${e}" target="_blank" rel="noopener">${t}</a>`;
     }
   }
 });
-let b = class extends lt {
+let b = class extends ht {
   constructor() {
-    super(...arguments), this._summary = "", this._loading = !0, this._error = "";
+    super(...arguments), this._summary = "", this._loading = !0, this._error = "", this._fetchSummary = async () => {
+      this._abortController?.abort(), this._abortController = new AbortController(), this._loading = !0, this._error = "";
+      try {
+        const r = await this.getContext(ct);
+        if (!r) {
+          this._error = "Authentication context not available.", this._loading = !1;
+          return;
+        }
+        const t = await r.getLatestToken(), e = await fetch(
+          "/umbraco/ailoganalyser/api/v1.0/analyse",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${t}`
+            },
+            body: JSON.stringify({
+              level: this.data?.level,
+              timestamp: this.data?.timestamp,
+              message: this.data?.message,
+              messageTemplate: this.data?.messageTemplate || void 0,
+              exception: this.data?.exception || void 0,
+              properties: this.data?.properties || void 0
+            }),
+            signal: this._abortController.signal
+          }
+        );
+        if (!e.ok) {
+          const i = await e.text();
+          throw new Error(
+            `API returned ${e.status}: ${i.substring(0, 200)}`
+          );
+        }
+        const s = await e.json();
+        this._summary = s.summary;
+      } catch (r) {
+        if (r instanceof DOMException && r.name === "AbortError") return;
+        this._error = r instanceof Error ? r.message : "Failed to get AI summary.";
+      } finally {
+        this._loading = !1;
+      }
+    };
   }
   connectedCallback() {
     super.connectedCallback(), this._fetchSummary();
   }
-  async _fetchSummary() {
-    this._loading = !0, this._error = "";
-    try {
-      const t = await (await this.getContext(ct)).getLatestToken(), e = await fetch(
-        "/umbraco/ailoganalyser/api/v1.0/analyse",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${t}`
-          },
-          body: JSON.stringify({
-            level: this.data?.level,
-            timestamp: this.data?.timestamp,
-            message: this.data?.message,
-            messageTemplate: this.data?.messageTemplate || void 0,
-            exception: this.data?.exception || void 0,
-            properties: this.data?.properties || void 0
-          })
-        }
-      );
-      if (!e.ok) {
-        const i = await e.text();
-        throw new Error(
-          `API returned ${e.status}: ${i.substring(0, 200)}`
-        );
-      }
-      const s = await e.json();
-      this._summary = s.summary;
-    } catch (r) {
-      this._error = r instanceof Error ? r.message : "Failed to get AI summary.";
-    } finally {
-      this._loading = !1;
-    }
+  disconnectedCallback() {
+    super.disconnectedCallback(), this._abortController?.abort();
   }
   _close() {
     this.modalContext?.reject();
   }
   render() {
-    const r = Dt(this.data?.level ?? "");
-    return f`
+    const r = It(this.data?.level ?? "");
+    return $`
       <uui-dialog-layout headline="AI Log Analysis">
         <div class="content-wrapper">
           <div class="log-section">
             <div class="log-meta">
-          ${this.data?.level ? f`<span
+          ${this.data?.level ? $`<span
                 class="level-badge"
                 style="background:${r}"
                 >${this.data.level}</span
               >` : z}
-          ${this.data?.timestamp ? f`<span>${this.data.timestamp}</span>` : z}
+          ${this.data?.timestamp ? $`<span>${this.data.timestamp}</span>` : z}
         </div>
 
         <div class="log-message">${this.data?.message}</div>
@@ -626,22 +636,22 @@ let b = class extends lt {
           <div class="summary-section">
             <div class="summary-label">AI Summary</div>
 
-        ${this._loading ? f`
+        ${this._loading ? $`
               <div class="loading">
                 <uui-loader-bar></uui-loader-bar>
                 <span class="loading-text"
                   >Analysing log entry with AI...</span
                 >
               </div>
-            ` : this._error ? f`<div class="error">${this._error}</div>` : f`
+            ` : this._error ? $`<div class="error">${this._error}</div>` : $`
                 <div class="summary-content">
-                  ${jt(st.parse(this._summary))}
+                  ${jt(st.parse(this._summary, { async: !1 }))}
                     </div>
                   `}
           </div>
         </div>
 
-        ${!this._loading && !this._error ? f`
+        ${!this._loading && !this._error ? $`
               <uui-button
                 slot="actions"
                 look="secondary"
@@ -664,7 +674,7 @@ let b = class extends lt {
     `;
   }
 };
-b.styles = ht`
+b.styles = lt`
     :host {
       display: block;
       max-width: 800px;
@@ -820,4 +830,4 @@ b = R([
 export {
   b as default
 };
-//# sourceMappingURL=log-ai-summary-dialog.element-cpr5Ruea.js.map
+//# sourceMappingURL=log-ai-summary-dialog.element-CbouTqKD.js.map

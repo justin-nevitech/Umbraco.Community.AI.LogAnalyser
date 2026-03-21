@@ -8,7 +8,7 @@ namespace AI.LogAnalyser.Controllers
 {
     [ApiController]
     [BackOfficeRoute("ailoganalyser/api/v{version:apiVersion}")]
-    [Authorize(Policy = AuthorizationPolicies.SectionAccessContent)]
+    [Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]
     [MapToApi(Constants.ApiName)]
     public class AILogAnalyserApiControllerBase : ControllerBase
     {
