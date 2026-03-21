@@ -8,7 +8,7 @@ An Umbraco package that adds AI-powered log analysis to the backoffice log viewe
 
 Supports any AI provider available through the [Umbraco.AI](https://www.nuget.org/packages/Umbraco.AI) abstraction layer, including OpenAI, Anthropic, Google, Amazon Bedrock and Microsoft AI Foundry.
 
-<img alt="AI Log Analysis modal showing a summary, cause and recommended action for an error log entry" src="https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png" width="700">
+![AI Log Analysis modal showing a summary, cause and recommended action for an error log entry](https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png)
 
 ## Features
 
