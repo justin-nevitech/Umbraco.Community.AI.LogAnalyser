@@ -3,15 +3,19 @@ import { defineConfig } from "vite";
 export default defineConfig({
   build: {
     lib: {
-      entry: "src/index.ts", // Bundle registers one or more manifests
+      entry: "src/index.ts",
       formats: ["es"],
-      fileName: "ai-log-analyser",
     },
-    outDir: "../wwwroot/App_Plugins/AILogAnalyser", // your web component will be saved in this location
+    outDir: "../wwwroot/App_Plugins/Umbraco.Community.AI.LogAnalyser",
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
       external: [/^@umbraco/],
+      output: {
+        // Content-hash entry point filename for cache busting
+        entryFileNames: "ai-log-analyser-[hash].js",
+        chunkFileNames: "[name]-[hash].js",
+      },
     },
   },
 });

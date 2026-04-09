@@ -8,7 +8,7 @@
       "name": "AI Log Analyser Entry Point",
       "alias": "Umbraco.Community.AI.LogAnalyser.EntryPoint",
       "type": "backofficeEntryPoint",
-      "js": "/App_Plugins/Umbraco.Community.AI.LogAnalyser/ai-log-analyser.js"
+      "js": "/App_Plugins/Umbraco.Community.AI.LogAnalyser/ai-log-analyser-DAEpf8hp.js"
     }
   ]
 }
