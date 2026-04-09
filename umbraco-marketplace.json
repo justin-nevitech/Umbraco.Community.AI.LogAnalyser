@@ -1,20 +1,22 @@
 {
-    "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json", 
+    "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
     "AuthorDetails": {
       "Name": "Justin Neville",
       "ImageUrl": "https://github.com/justin-nevitech.png"
     },
-    "Category": "Developer Tools",
+    "Category": "Artificial Intelligence",
+    "AlternateCategory": "Developer Tools",
     "Description": "Adds AI-powered log analysis to the Umbraco backoffice log viewer. Analyse any log entry with one click using your configured AI provider via Umbraco.AI.",
     "LicenseTypes": [ "Free" ],
     "IssueTrackerUrl": "https://github.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/issues",
+    "DocumentationUrl": "https://github.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser",
     "PackageType": "Package",
-    "Tags": ["AI", "Logging", "Developer Tools"],
+    "Tags": ["AI", "Logging", "Developer Tools", "Diagnostics"],
     "Screenshots": [
       {
         "Url": "https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png",
         "Caption": "AI Log Analysis modal showing summary, cause and recommended action"
       }
     ],
-    "Title": "AI.Log Analyser "
+    "Title": "AI.Log Analyser"
   }

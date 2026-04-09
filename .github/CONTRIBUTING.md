@@ -16,27 +16,27 @@ There is a test site in the solution to make working with this repository easier
 
 1. Clone the repository
 2. Open the solution in your IDE
-3. Set `AI.LogAnalyser.TestSite` as the startup project
+3. Set `Umbraco.Community.AI.LogAnalyser.TestSite` as the startup project
 4. Run the project — it will perform an unattended Umbraco install on first run
 5. Log in with the credentials from `appSettings.json`
 
 ### Building the Frontend
 
-The frontend client is in `src/AI.LogAnalyser/Client/`. To build:
+The frontend client is in `src/Umbraco.Community.AI.LogAnalyser/Client/`. To build:
 
 ```bash
-cd src/AI.LogAnalyser/Client
+cd src/Umbraco.Community.AI.LogAnalyser/Client
 npm install
 npm run build
 ```
 
-The built output goes to `src/AI.LogAnalyser/wwwroot/App_Plugins/AILogAnalyser/`.
+The built output goes to `src/Umbraco.Community.AI.LogAnalyser/wwwroot/App_Plugins/AILogAnalyser/`.
 
 ## Project Structure
 
 ```
 src/
-  AI.LogAnalyser/                    # Main package project
+  Umbraco.Community.AI.LogAnalyser/                    # Main package project
     Client/                          # Frontend (Lit web components, TypeScript)
       src/
         index.ts                     # Entry point, LogViewerEnhancer
@@ -47,7 +47,7 @@ src/
     Services/                        # System diagnostics, log context provider
     Composers/                       # DI registration
     wwwroot/                         # Built static assets
-  AI.LogAnalyser.TestSite/           # Test Umbraco site
+  Umbraco.Community.AI.LogAnalyser.TestSite/           # Test Umbraco site
 ```
 
 ## Guidelines
