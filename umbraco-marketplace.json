@@ -14,7 +14,7 @@
     "Tags": ["AI", "Logging", "Developer Tools", "Diagnostics"],
     "Screenshots": [
       {
-        "Url": "https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png",
+        "ImageUrl": "https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png",
         "Caption": "AI Log Analysis modal showing summary, cause and recommended action"
       }
     ],
