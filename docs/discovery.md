@@ -105,16 +105,41 @@ Final working versions for `net10.0`:
 
 | Package | Version |
 |---------|---------|
-| Microsoft.NET.Test.Sdk | 17.* (resolved 17.14.1) |
-| xunit | 2.* (resolved 2.9.3) |
-| xunit.runner.visualstudio | 2.* (resolved 2.8.2) |
-| NSubstitute | 5.* (resolved 5.3.0) |
-| FluentAssertions | 8.* (resolved 8.9.0) |
-| Microsoft.Extensions.AI | 10.* (resolved 10.4.1) |
+| Microsoft.NET.Test.Sdk | 18.6.0 |
+| xunit | 2.* |
+| xunit.runner.visualstudio | 3.1.5 |
+| NSubstitute | 5.* |
+| FluentAssertions | 8.* |
+| Microsoft.Extensions.AI | 10.* |
+
+## Umbraco 18 Dual-Major Support
+
+**Finding**: Supporting Umbraco 17 and 18 from one codebase needed a non-standard multi-targeting approach.
+
+- **Both majors are `net10.0`**, so the usual TFM-based multi-targeting (`net6.0`/`net8.0`) does not apply. Used a single `UmbracoMajor` MSBuild switch that selects the Umbraco package range and defines `UMBRACO_18`.
+- **Umbraco 18 removed Swashbuckle** for OpenAPI in favour of `Microsoft.AspNetCore.OpenApi`. The types the v17 composer relied on (`SwaggerGenOptions.SwaggerDoc`, `OpenApiInfo`, `BackOfficeSecurityRequirementsOperationFilterBase`, `IOperationIdHandler`/`OperationIdHandler`) are gone. The v18 replacement is `builder.AddBackOfficeOpenApiDocument(name, doc => doc.WithTitle(...).WithBackOfficeAuthentication().ConfigureOpenApiOptions(o => o.AddOperationTransformer(...)))`. This is the only code behind `#if UMBRACO_18`. Exact namespaces were confirmed by reading the `18.0.0-rc1` assembly metadata: `AddBackOfficeOpenApiDocument`/`WithTitle`/`ConfigureOpenApiOptions` live in `Umbraco.Cms.Api.Common.OpenApi`, `WithBackOfficeAuthentication` in `Umbraco.Cms.Api.Management.OpenApi`.
+- **`Umbraco.AI` blocks Umbraco 18 today.** The latest release (`1.14.0`) pins `Umbraco.Cms.Core` to `[17.4.0, 17.999.999)`. The package *project* still compiles in `UmbracoMajor=18` mode because its direct `Umbraco.Cms.*` references out-rank Umbraco.AI's constraint as an `NU1608` warning — but a real Umbraco 18 consumer site (and `TestSite.v18`) fails to restore with a hard `NU1107` conflict (no direct-reference winner). So the 18.x package cannot be published until a v18-compatible `Umbraco.AI` ships. Full details and the steps to finish v18 support are in [BUILDING.md](BUILDING.md).
+
+## Prompt Token Optimisation
+
+**Finding**: The system-context assembly inventory was by far the largest, lowest-value part of every prompt.
+
+- On a real site, `AppDomain.CurrentDomain.GetAssemblies()` through the old framework-denylist still yielded **~183 entries** (cloud SDKs, Lucene internals, serialisation libs, etc.) — roughly 1,500–2,200 tokens per request of transitive dependencies that are version-locked to the CMS and carry no independent diagnostic value.
+- Switched to an **allowlist**: anything containing "umbraco", the application's own assembly, and a curated `RelevantAssemblyPrefixes` set of commonly-implicated infrastructure (search/db/email/imaging/etc.). Then **collapsed same-version sub-assemblies** by package family (first three name segments) into one line. Result: ~183 → ~40 lines.
+- **`Properties` truncation** lowered from 8 KB to 2 KB (largest, lowest-signal field).
+- **Restructured the messages for prompt caching**: all static content (instructions + diagnostics) is now a single `ChatRole.System` prefix; only the variable log data is in the user message; any tone addendum is appended last. This lets OpenAI/Anthropic prompt caching reuse the prefix across requests. Note: anything excluded from the assembly list still appears in the exception **stack trace** when it actually throws, so diagnostic coverage is preserved.
+
+## Tooling: Stale `bin` After Renaming a Project
+
+**Issue**: After renaming a test site project/assembly, Umbraco startup threw `FileNotFoundException: Could not load file or assembly '...TestSite'` from `FindAssembliesWithReferencesTo.ResolveAssemblies()`.
+
+**Cause**: MSBuild does not remove differently-named outputs, so the old-named assembly lingered in `bin` alongside the new one. Umbraco's `TypeFinder` scans every assembly in `bin`, hit the orphan, and failed to load it (it is not listed in the new app's `.deps.json`).
+
+**Fix**: Delete `bin`/`obj` once after any project/assembly rename and rebuild — `dotnet clean` and incremental builds do not purge old-named artifacts.
 
 ## Test Coverage Summary
 
-54 tests total (all passing):
+89 tests total (all passing):
 
-- **LogContextProviderTests** (20 tests): surrounding log retrieval, current entry exclusion, deduplication (consecutive same level+message, different messages, different levels, after entries), chronological ordering, empty/failed/null responses, max entries, field mapping, cancellation, frequency counting (exact match, case sensitivity, configuration).
-- **AILogAnalyserApiControllerTests** (34 tests): validation, successful analysis, null response handling, optional fields, truncation, surrounding context formatting, frequency notes, timestamp handling, graceful degradation, system diagnostics, AI failure → 502, prompt structure (roles, headings, message count).
+- **LogContextProviderTests** (31 tests): surrounding log retrieval, current entry exclusion, deduplication (consecutive same level+message, different messages, different levels, after entries), chronological ordering, empty/failed/null responses, max entries, field mapping, cancellation, frequency counting (exact match, case sensitivity, configuration).
+- **AILogAnalyserApiControllerTests** (58 tests): validation, successful analysis, null response handling, optional fields, truncation, surrounding context formatting, frequency notes, timestamp handling, graceful degradation, system diagnostics, AI failure → 502, prompt structure (roles, headings, message count), and configurable per-request prompt options.

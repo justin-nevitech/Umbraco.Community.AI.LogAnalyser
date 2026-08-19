@@ -12,7 +12,7 @@ const u = new h(
     type: "modal",
     alias: "LogAiSummary.Modal",
     name: "Log AI Summary Modal",
-    js: () => import("./log-ai-summary-dialog.element-DgjL-Yj7.js")
+    js: () => import("./log-ai-summary-dialog.element-CtbEyW8C.js")
   };
   e.register(t), new _(l).start();
 }, d = "flex: 0 0 4ch; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; justify-content: center; margin-left: auto;", g = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" viewBox="0 0 24 24"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72M14 7l3 3M5 6v4M19 14v4M10 2v2M7 8H3M21 16h-4M11 3H9"/></svg>';
@@ -111,4 +111,4 @@ class _ {
 export {
   v as onInit
 };
-//# sourceMappingURL=ai-log-analyser-DAEpf8hp.js.map
+//# sourceMappingURL=ai-log-analyser-CYXXADpy.js.map

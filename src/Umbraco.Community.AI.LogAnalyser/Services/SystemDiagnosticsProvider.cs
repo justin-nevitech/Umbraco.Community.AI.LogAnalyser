@@ -11,6 +11,26 @@ namespace Umbraco.Community.AI.LogAnalyser.Services;
 
 public class SystemDiagnosticsProvider : ISystemDiagnosticsProvider
 {
+    // Additional diagnostically-relevant assembly-name prefixes that do NOT contain the word
+    // "umbraco" (anything containing "umbraco" is already included). These are infrastructure
+    // packages whose failures commonly surface in Umbraco logs, where knowing the installed
+    // version aids diagnosis. Extend this to surface more package families in the AI prompt.
+    // (Serilog.* and Lucene.Net.* are intentionally omitted — they span many assemblies and add
+    //  little beyond what the exception stack trace already shows; add them here if you want them.)
+    private static readonly string[] RelevantAssemblyPrefixes =
+    [
+        "uSync",                // sync / deploy
+        "Examine",              // search / indexing
+        "NPoco",                // database / ORM (Umbraco's data layer)
+        "Microsoft.Data.",      // database drivers (SqlClient / Sqlite)
+        "MailKit", "MimeKit",   // email / SMTP
+        "SixLabors",            // image processing (ImageSharp)
+        "Smidge",               // asset bundling / minification
+        "StackExchange.Redis",  // distributed cache / load balancing
+        "Hangfire",             // background jobs
+        "Newtonsoft.Json",      // JSON serialisation
+    ];
+
     private readonly Lazy<string> _context;
 
     public SystemDiagnosticsProvider(
@@ -57,33 +77,59 @@ public class SystemDiagnosticsProvider : ISystemDiagnosticsProvider
         var process = Process.GetCurrentProcess();
         sb.AppendLine($"Application started: {process.StartTime:O}");
 
-        sb.AppendLine("Assemblies:");
+        // Only surface diagnostically-relevant packages: anything Umbraco-related (any assembly
+        // whose name contains "umbraco"), other relevant add-ons (uSync), plus the application's
+        // own assembly. The long tail of transitive dependencies (cloud SDKs, Lucene internals,
+        // serialisation libraries, etc.) is version-locked to the CMS, is rarely consulted when
+        // diagnosing a single log entry, and would otherwise dominate the prompt — so it's
+        // excluded to keep the request small and fast.
+        var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
+
+        sb.AppendLine("Installed packages:");
         var assemblies = AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => !a.IsDynamic)
             .Select(a => (Name: a.GetName().Name ?? "", Version: a.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                 ?? a.GetName().Version?.ToString() ?? "?"))
             .Where(a => !string.IsNullOrEmpty(a.Name)
-                && !a.Name.StartsWith("System.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.Extensions.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.AspNetCore.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.EntityFrameworkCore.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.CodeAnalysis.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.CSharp", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.Win32.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.VisualStudio.", StringComparison.Ordinal)
-                && !a.Name.StartsWith("Microsoft.WebTools.", StringComparison.Ordinal)
-                && !a.Name.Equals("netstandard", StringComparison.Ordinal))
-            .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
+                && (a.Name.Contains("umbraco", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(a.Name, entryAssemblyName, StringComparison.Ordinal)
+                    || RelevantAssemblyPrefixes.Any(p => a.Name.StartsWith(p, StringComparison.Ordinal))))
+            .Select(a => (a.Name, Version: CleanVersion(a.Version)))
             .ToList();
 
-        foreach (var (name, version) in assemblies)
+        // Collapse a package's many same-version sub-assemblies (e.g. Umbraco.AI.Agent.Core,
+        // .Agent.Persistence.Sqlite, .Agent.Web.StaticAssets) into a single line, grouping by the
+        // first three name segments. A group with one assembly prints its full name; otherwise it
+        // prints "<family>.* <version> (N assemblies)". This keeps meaningful package/provider
+        // names (e.g. Umbraco.AI.OpenAI) while trimming redundant internal sub-assemblies.
+        var groups = assemblies
+            .GroupBy(a => (Family: FamilyRoot(a.Name), a.Version))
+            .OrderBy(g => g.Key.Family, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(g => g.Key.Version, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in groups)
         {
-            var ver = version.Contains('+') ? version[..version.IndexOf('+')] : version;
-            sb.AppendLine($"  {name} {ver}");
+            var count = group.Count();
+            if (count == 1)
+                sb.AppendLine($"  {group.First().Name} {group.Key.Version}");
+            else
+                sb.AppendLine($"  {group.Key.Family}.* {group.Key.Version} ({count} assemblies)");
         }
 
         return sb.ToString();
     }
+
+    // The package-family key used to collapse sub-assemblies: the first three dot-separated
+    // segments (or the whole name when it has three or fewer).
+    private static string FamilyRoot(string name)
+    {
+        var parts = name.Split('.');
+        return parts.Length <= 3 ? name : string.Join('.', parts[..3]);
+    }
+
+    // Strips build metadata (the '+sha' suffix) from an informational version.
+    private static string CleanVersion(string version) =>
+        version.Contains('+') ? version[..version.IndexOf('+')] : version;
 
     private static string InferDatabaseProvider(string connectionString)
     {
