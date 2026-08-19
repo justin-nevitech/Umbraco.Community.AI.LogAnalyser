@@ -10,6 +10,19 @@ Supports any AI provider available through the [Umbraco.AI](https://www.nuget.or
 
 ![AI Log Analysis modal showing a summary, cause and recommended action for an error log entry](https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png)
 
+## Compatibility
+
+The package builds from a single codebase against both Umbraco 17 and 18. Packaging is **version-aligned**: the package major matches your Umbraco major.
+
+| Umbraco | Package version | Status |
+|---------|-----------------|--------|
+| 17.x    | `17.x`          | ✅ Supported (requires Umbraco 17.4.0+) |
+| 18.x    | `18.x`          | ✅ Supported |
+
+Umbraco 18 dropped Swashbuckle, so the OpenAPI integration is migrated to the `Microsoft.AspNetCore.OpenApi` stack on that major; everything else is shared code. See [docs/BUILDING.md](../docs/BUILDING.md) for the technical details.
+
+> **Pin the major when installing.** Both majors publish under the same package ID, and NuGet resolves the *latest* version rather than the one matching your Umbraco major — so a bare `dotnet add package` on an Umbraco 17 site will pull the `18.x` package and fail with a `NU1107` version conflict. Specify the major you need (see [Installation](#installation)).
+
 ## Features
 
 - Adds an **AI** column to the log viewer search results
@@ -17,7 +30,7 @@ Supports any AI provider available through the [Umbraco.AI](https://www.nuget.or
 - Returns a structured analysis with a plain-language summary, likely cause and suggested next steps
 - Includes **surrounding log entries** (before and after) so the AI can understand the sequence of events
 - Detects **error frequency** — tells the AI how many times the same error appeared in the last hour
-- Includes **system diagnostics** (Umbraco version, .NET version, OS, database provider, hosting model, ModelsBuilder mode, loaded assemblies) for richer, environment-aware analysis
+- Includes **system diagnostics** (Umbraco version, .NET version, OS, database provider, hosting model, ModelsBuilder mode, and a focused list of relevant installed packages) for richer, environment-aware analysis
 - Logs **performance diagnostics** (context gathering time, AI response time, total request time) to the Umbraco log
 - Deduplicates repeated log entries in the context window to keep prompts concise
 - Truncates oversized exception and property fields to prevent excessive AI prompt sizes
@@ -27,11 +40,17 @@ Supports any AI provider available through the [Umbraco.AI](https://www.nuget.or
 
 ## Installation
 
-Add the package to an existing Umbraco website (v17.2+) from NuGet:
+Add the package to an existing Umbraco website (v17.4+ — see [Compatibility](#compatibility)) from NuGet, pinning the major that matches your Umbraco version:
 
 ```
-dotnet add package Umbraco.Community.AI.LogAnalyser
+# Umbraco 17
+dotnet add package Umbraco.Community.AI.LogAnalyser --version "17.*"
+
+# Umbraco 18
+dotnet add package Umbraco.Community.AI.LogAnalyser --version "18.*"
 ```
+
+The `"17.*"` / `"18.*"` floating version keeps you on the line built for your Umbraco major while still picking up its latest patch. Omitting `--version` resolves to the highest version published overall, which will be the wrong major for Umbraco 17 sites.
 
 You will also need at least one Umbraco.AI provider package installed and configured, for example:
 
@@ -84,7 +103,7 @@ When you click the AI button, the following information is sent to your configur
 | Log level, timestamp, rendered message | The selected log entry |
 | Message template | Serilog structured logging template (e.g. `"Failed to resolve content by route '{Route}'"`) |
 | Exception & stack trace | If present on the log entry (truncated to 8 KB) |
-| Structured properties | Key-value pairs from the Serilog log event (truncated to 8 KB) |
+| Structured properties | Key-value pairs from the Serilog log event (truncated to 2 KB) |
 | Surrounding log entries | Configurable entries before and after (default: 10, within a 5-minute window), deduplicated |
 | Error frequency | How many times the exact same message appeared in the last hour (configurable) |
 | Umbraco version | e.g. `17.2.2` |
@@ -96,9 +115,11 @@ When you click the AI button, the following information is sent to your configur
 | ModelsBuilder mode | e.g. `InMemoryAuto`, `SourceCodeManual` |
 | Hosting model | Azure App Service, Docker/Container, IIS, IIS Express, or Kestrel |
 | Application start time | When the process was started |
-| Loaded assemblies | Non-framework assemblies and their versions (Umbraco packages, custom code, etc.) |
+| Installed packages | A focused list of relevant package versions — Umbraco-related packages, your own application assembly, and key infrastructure (search, database, email, imaging, etc.). Not the full assembly list, and same-version sub-assemblies are collapsed, to keep prompts small |
 
 No content data, user data, or credentials are sent. All requests go directly from your server to your configured AI provider.
+
+The prompt is kept token-efficient: static instructions and system context form a stable "system message" prefix (which providers with prompt caching can reuse across requests for lower cost and faster responses), while only the variable log data goes in the user message.
 
 ## Performance Diagnostics
 
@@ -145,13 +166,18 @@ Browser (Backoffice)                     Server
 **AI button doesn't appear**
 - Make sure you're on the **Search** tab of the log viewer (not the Overview tab)
 - Check the browser console for any JavaScript errors
-- The package requires Umbraco v17.2 or later
+- The package requires Umbraco v17.4 or later
 
 **Analysis is slow**
 - Response time depends on your AI provider and model choice
 - Larger log entries with long stack traces take longer to analyse
 - Reduce `MaxSurroundingEntries` or `SurroundingWindowMinutes` to send less context
 - Check the performance diagnostics in the log viewer for timing breakdowns
+
+## Author
+
+Created and maintained by [Justin Neville](https://www.nevitech.co.uk) at
+[Nevitech IT Solutions Ltd](https://www.nevitech.co.uk).
 
 ## Contributing
 

@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Umbraco v17.2+ backoffice package that adds AI-powered log analysis to the log viewer. Users click "Analyse with AI" on any log entry to get a structured analysis (Summary, Cause, Recommended Action) via the Umbraco.AI abstraction layer. Published as NuGet package `Umbraco.Community.AI.LogAnalyser`.
+Umbraco v17.4+ backoffice package that adds AI-powered log analysis to the log viewer. Users click "Analyse with AI" on any log entry to get a structured analysis (Summary, Cause, Recommended Action) via the Umbraco.AI abstraction layer. Published as NuGet package `Umbraco.Community.AI.LogAnalyser`.
+
+### Dual-major (Umbraco 17 / 18) support
+
+Both majors are `net10.0`, so TFM multi-targeting is not used. Instead there are **two wrapper package projects compiling the same sources**: `Umbraco.Community.AI.LogAnalyser.v17` (Umbraco `[17.4.0, 18.0.0)`) and `Umbraco.Community.AI.LogAnalyser.v18` (Umbraco `[18.0.0, 19.0.0)`, defines `UMBRACO_18`). `Umbraco.Community.AI.LogAnalyser` is **not a project** — it is the shared source folder (C# sources, TypeScript client, built `wwwroot/App_Plugins`), and both wrappers import `LogAnalyser.Shared.props` and `SharedBackofficeAssets.targets` from it, so new files are picked up automatically. Packaging is version-aligned under one PackageId: the package major tracks the Umbraco major, and `Umbraco.AI` follows the same convention (its old `1.x` line was superseded by `17.x`/`18.x`). The only version-specific code is the OpenAPI registration in `Composers/AILogAnalyserApiComposer.cs` (Umbraco 18 removed Swashbuckle) — which is *why* two projects are needed: NuGet restore evaluates each project once with its default properties, so a single project with an MSBuild switch could not restore at both majors in one solution. Full details in `docs/BUILDING.md`.
 
 ## Build & Development Commands
 
@@ -19,7 +23,7 @@ npm install
 npm run build          # TypeScript compile + Vite build
 npm run watch          # Dev mode with file watching
 ```
-Output goes to `src/Umbraco.Community.AI.LogAnalyser/wwwroot/App_Plugins/AILogAnalyser/`.
+Output goes to `src/Umbraco.Community.AI.LogAnalyser/wwwroot/App_Plugins/Umbraco.Community.AI.LogAnalyser/`.
 
 ### Generate OpenAPI Client
 ```bash
@@ -31,9 +35,9 @@ npm run generate-client  # Requires test site running on https://localhost:44300
 ```bash
 cd src
 dotnet build Umbraco.Community.AI.LogAnalyser.sln
-dotnet run --project Umbraco.Community.AI.LogAnalyser.TestSite  # Run test Umbraco site
+dotnet run --project Umbraco.Community.AI.LogAnalyser.TestSite.v17  # Run Umbraco 17 test site
 ```
-Test site login: admin@example.com / 1234567890 (SQLite, unattended install).
+Test site login: admin@example.com / 1234567890 (SQLite, unattended install). There are two test sites, both in the solution and runnable at the same time: `TestSite.v17` (Umbraco 17, `https://localhost:44300`, references `Umbraco.Community.AI.LogAnalyser.v17`) and `TestSite.v18` (Umbraco 18, `https://localhost:44301`, references `Umbraco.Community.AI.LogAnalyser.v18`). See `docs/BUILDING.md`.
 
 ### Tests
 ```bash
@@ -46,16 +50,19 @@ Uses xUnit, NSubstitute, FluentAssertions.
 
 ### Package
 ```bash
-dotnet pack src/Umbraco.Community.AI.LogAnalyser/Umbraco.Community.AI.LogAnalyser.csproj -c Release
+# Umbraco 17 variant
+dotnet pack src/Umbraco.Community.AI.LogAnalyser.v17/Umbraco.Community.AI.LogAnalyser.v17.csproj -c Release
+# Umbraco 18 variant
+dotnet pack src/Umbraco.Community.AI.LogAnalyser.v18/Umbraco.Community.AI.LogAnalyser.v18.csproj -c Release
 ```
 
 ## Architecture
 
 ### Backend (.NET, Razor SDK)
-- **Controllers**: `AILogAnalyserApiController` — single POST endpoint at `/umbraco/ailoganalyser/api/v1.0/analyse`. Builds an AI prompt with log entry, surrounding context, error frequency, and system diagnostics, then returns markdown.
-- **Services**: `LogContextProvider` fetches surrounding log entries (with deduplication) and error frequency via `ILogViewerService`. `SystemDiagnosticsProvider` gathers system context (Umbraco version, .NET, OS, database, assemblies) — lazy-initialized singleton.
-- **Composers**: `AILogAnalyserApiComposer` registers DI services, binds `LogContextSettings` from `appsettings.json` under `AILogAnalyser:LogContext`, and configures Swagger.
-- **Models**: DTOs for request/response and log context. Large fields truncated to 8192 chars.
+- **Controllers**: `AILogAnalyserApiController` — single POST endpoint at `/umbraco/ailoganalyser/api/v1.0/analyse`. Builds the AI prompt from the log entry, surrounding context, error frequency, and system diagnostics, then returns markdown. Static content (instructions + diagnostics) goes in the system message as a cache-friendly stable prefix; only the variable log data goes in the user message.
+- **Services**: `LogContextProvider` fetches surrounding log entries (with deduplication) and error frequency via `ILogViewerService`. `SystemDiagnosticsProvider` gathers system context (Umbraco version, .NET, OS, database, and a curated subset of relevant installed packages — Umbraco-related + key infra, sub-assemblies collapsed) — lazy-initialized singleton.
+- **Composers**: `AILogAnalyserApiComposer` registers DI services, binds settings from `appsettings.json` under the `AILogAnalyser` section, and configures the backoffice OpenAPI document (Swashbuckle on Umbraco 17, `Microsoft.AspNetCore.OpenApi` on Umbraco 18 — the only code behind `#if UMBRACO_18`).
+- **Models**: DTOs for request/response and log context. Large fields are truncated (8 KB for message/exception; properties get a tighter 2 KB cap).
 
 ### Frontend (TypeScript, Lit, Vite)
 - **`index.ts`**: `LogViewerEnhancer` polls the backoffice DOM every 1s, injects AI buttons into log rows through shadow DOM boundaries. Uses WeakSet to track enhanced rows.
@@ -79,7 +86,7 @@ dotnet pack src/Umbraco.Community.AI.LogAnalyser/Umbraco.Community.AI.LogAnalyse
 
 ## Release Process
 
-Tagging a semantic version (e.g., `1.2.3`) triggers the GitHub Actions workflow (`.github/workflows/release.yml`) which packs and pushes to NuGet.
+Tagging a version (e.g., `17.2.3` or `18.0.0`, or a prerelease like `18.1.0-rc1`) triggers the GitHub Actions workflow (`.github/workflows/release.yml`) which packs and pushes to NuGet. Packaging is version-aligned: the workflow selects the package project from the tag's leading major number (`17.x` → the `.v17` project, `18.x` → the `.v18` project) and fails on any other major. See `docs/BUILDING.md`.
 
 ## Key Conventions
 
@@ -92,7 +99,7 @@ Tagging a semantic version (e.g., `1.2.3`) triggers the GitHub Actions workflow 
 
 - **DI registration**: Use `IComposer` implementations (not `Startup.cs`) to register services via `IUmbracoBuilder`. Singletons for stateless/cached services, transient for services with per-request Umbraco dependencies like `ILogViewerService`.
 - **Backoffice API controllers**: Inherit from a base controller with `[BackOfficeRoute]`, `[Authorize(Policy = AuthorizationPolicies.SectionAccessSettings)]`, and `[MapToApi]`. Use `[ApiVersion]` on the concrete controller. This ensures correct routing, auth, and Swagger grouping.
-- **Swagger/OpenAPI**: Register a `SwaggerDoc` per API group in the composer. Subclass `BackOfficeSecurityRequirementsOperationFilterBase` for auth requirements. Use a custom `OperationIdHandler` scoped to this package's namespace for clean generated TypeScript client method names.
+- **Swagger/OpenAPI**: This is the one area that differs between Umbraco majors, isolated behind `#if UMBRACO_18` in the composer. On **Umbraco 17** (Swashbuckle): register a `SwaggerDoc` per API group, subclass `BackOfficeSecurityRequirementsOperationFilterBase` for auth, and use a custom `OperationIdHandler` for clean generated client method names. On **Umbraco 18** (`Microsoft.AspNetCore.OpenApi`, Swashbuckle removed): use `builder.AddBackOfficeOpenApiDocument(name, doc => doc.WithTitle(...).WithBackOfficeAuthentication().ConfigureOpenApiOptions(o => o.AddOperationTransformer(...)))`. The document name must match `[MapToApi(Constants.ApiName)]` on the controller. See `docs/BUILDING.md`.
 - **Umbraco service return types**: `ILogViewerService.GetPagedLogsAsync` returns `Attempt<PagedModel<T>, TStatus>` — always check `.Success` and null-check `.Result` before accessing `.Items`.
 - **Umbraco configuration**: Bind settings via `builder.Config.GetSection()` into an `IOptions<T>` wrapper. Use `builder.Services.Configure<T>()` in the composer, inject `IOptions<T>` in consuming services.
 

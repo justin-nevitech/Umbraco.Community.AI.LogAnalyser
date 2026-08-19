@@ -1,4 +1,4 @@
-# AI.Log Analyser
+# AI Log Analyser
 
 [![Downloads](https://img.shields.io/nuget/dt/Umbraco.Community.AI.LogAnalyser?color=cc9900)](https://www.nuget.org/packages/Umbraco.Community.AI.LogAnalyser/)
 [![NuGet](https://img.shields.io/nuget/vpre/Umbraco.Community.AI.LogAnalyser?color=0273B3)](https://www.nuget.org/packages/Umbraco.Community.AI.LogAnalyser)
@@ -10,10 +10,29 @@ Supports any AI provider available through [Umbraco.AI](https://www.nuget.org/pa
 
 ![AI Log Analysis modal showing a summary, cause and recommended action for an error log entry](https://raw.githubusercontent.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser/main/docs/screenshot.png)
 
+## Compatibility
+
+Packaging is **version-aligned** — the package major matches your Umbraco major:
+
+| Umbraco | Package version | Status |
+|---------|-----------------|--------|
+| 17.x    | `17.x`          | ✅ Supported (requires Umbraco 17.4.0+) |
+| 18.x    | `18.x`          | ✅ Supported |
+
+Umbraco 18 dropped Swashbuckle, so the OpenAPI integration uses the `Microsoft.AspNetCore.OpenApi` stack on that major; everything else is shared code.
+
+> **Pin the major when installing.** Both majors publish under the same package ID, and NuGet resolves the *latest* version rather than the one matching your Umbraco major — so a bare `dotnet add package` on an Umbraco 17 site will pull the `18.x` package and fail with a `NU1107` version conflict.
+
 ## Quick Start
 
+Install the package, pinning the major that matches your Umbraco version:
+
 ```
-dotnet add package Umbraco.Community.AI.LogAnalyser
+# Umbraco 17
+dotnet add package Umbraco.Community.AI.LogAnalyser --version "17.*"
+
+# Umbraco 18
+dotnet add package Umbraco.Community.AI.LogAnalyser --version "18.*"
 ```
 
 You will also need at least one Umbraco.AI provider package installed and configured (e.g. `Umbraco.AI.OpenAI`).
@@ -58,7 +77,12 @@ All settings are optional with sensible defaults:
 
 ## What context is sent to the AI?
 
-The package sends the log entry details (level, message, template, exception, properties), surrounding log entries, error frequency, and system diagnostics (Umbraco version, .NET, OS, database provider, hosting model, ModelsBuilder mode, loaded assemblies). No content data, user data, or credentials are sent.
+The package sends the log entry details (level, message, template, exception, properties), surrounding log entries, error frequency, and system diagnostics (Umbraco version, .NET, OS, database provider, hosting model, ModelsBuilder mode, and a focused list of relevant installed packages). No content data, user data, or credentials are sent. Prompts are kept token-efficient — static instructions and system context form a stable, cache-friendly prefix, and only the variable log data changes per request.
+
+## Author
+
+Created and maintained by [Justin Neville](https://www.nevitech.co.uk) at
+[Nevitech IT Solutions Ltd](https://www.nevitech.co.uk).
 
 ## Documentation
 

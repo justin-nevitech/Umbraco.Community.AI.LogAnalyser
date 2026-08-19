@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Umbraco.AI.Core.Chat;
@@ -30,8 +31,11 @@ public class AILogAnalyserApiControllerTests
 
         _diagnostics.GetContext().Returns("Umbraco: 17.2.2\n.NET: .NET 10.0\n");
 
-        _sut = new AILogAnalyserApiController(_chatService, _diagnostics, _logContext, _logger);
+        _sut = CreateController(new AILogAnalyserSettings());
     }
+
+    private AILogAnalyserApiController CreateController(AILogAnalyserSettings settings) =>
+        new(_chatService, _diagnostics, _logContext, _logger, Options.Create(settings));
 
     #region Validation
 
@@ -190,6 +194,112 @@ public class AILogAnalyserApiControllerTests
         await _chatService.Received(1).GetChatResponseAsync(
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("abc-123"))),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Analyse_AddsSnarkyInstruction_WhenSnarkyModeEnabled()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var sut = CreateController(new AILogAnalyserSettings { SnarkyMode = true });
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom" };
+
+        await sut.Analyse(request, CancellationToken.None);
+
+        await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Is<IList<ChatMessage>>(msgs =>
+                msgs.Any(m => m.Role == ChatRole.System && m.Text != null && m.Text.Contains("snarky"))),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Analyse_DoesNotAddSnarkyInstruction_ByDefault()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom" };
+
+        await _sut.Analyse(request, CancellationToken.None);
+
+        await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Is<IList<ChatMessage>>(msgs =>
+                msgs.All(m => m.Text == null || !m.Text.Contains("snarky"))),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Analyse_ResponseReportsSnarky_WhenSnarkyModeEnabled()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var sut = CreateController(new AILogAnalyserSettings { SnarkyMode = true });
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom" };
+
+        var result = await sut.Analyse(request, CancellationToken.None);
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<LogAnalyserResponse>().Subject;
+        response.Snarky.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Analyse_RequestSnarkyFalse_OverridesEnabledConfig()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var sut = CreateController(new AILogAnalyserSettings { SnarkyMode = true });
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom", Snarky = false };
+
+        var result = await sut.Analyse(request, CancellationToken.None);
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeOfType<LogAnalyserResponse>().Subject.Snarky.Should().BeFalse();
+        await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Is<IList<ChatMessage>>(msgs =>
+                msgs.All(m => m.Text == null || !m.Text.Contains("snarky"))),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Analyse_RequestSnarkyTrue_CannotEnableWhenConfigDisabled()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom", Snarky = true };
+
+        var result = await _sut.Analyse(request, CancellationToken.None);
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeOfType<LogAnalyserResponse>().Subject.Snarky.Should().BeFalse();
+        await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Is<IList<ChatMessage>>(msgs =>
+                msgs.All(m => m.Text == null || !m.Text.Contains("snarky"))),
+            cancellationToken: Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Analyse_RequestSnarkyTrue_DoesNotDisableWhenConfigEnabled()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var sut = CreateController(new AILogAnalyserSettings { SnarkyMode = true });
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom", Snarky = true };
+
+        var result = await sut.Analyse(request, CancellationToken.None);
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeOfType<LogAnalyserResponse>().Subject.Snarky.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Analyse_SnarkyAddendum_IsSeparatedFromSystemContextFence()
+    {
+        SetupSuccessfulChatResponse("Analysis");
+        var sut = CreateController(new AILogAnalyserSettings { SnarkyMode = true });
+        var request = new LogAnalyserRequest { Level = "Error", Message = "Boom" };
+
+        await sut.Analyse(request, CancellationToken.None);
+
+        // The addendum must start on its own line, not run on from the closing ``` fence.
+        await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Is<IList<ChatMessage>>(msgs =>
+                msgs.Any(m => m.Role == ChatRole.System && m.Text != null
+                    && m.Text.Contains("```\n\nAdopt a deeply snarky", StringComparison.Ordinal))),
             cancellationToken: Arg.Any<CancellationToken>());
     }
 
