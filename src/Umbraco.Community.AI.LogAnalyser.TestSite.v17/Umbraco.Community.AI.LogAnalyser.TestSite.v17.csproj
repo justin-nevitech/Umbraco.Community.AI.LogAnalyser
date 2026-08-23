@@ -18,6 +18,9 @@
     <PackageReference Include="Umbraco.AI.OpenAI" Version="17.2.0" />
     <PackageReference Include="Umbraco.AI.Prompt" Version="17.2.3" />
     <PackageReference Include="Umbraco.Cms" Version="17.6.2" />
+    <!-- Required by ModelsBuilder ModelsMode=InMemoryAuto: provides Razor runtime compilation
+         so the front-end views (which use generated PublishedModels) can be compiled. -->
+    <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.6.2" />
   </ItemGroup>
 
   <ItemGroup>

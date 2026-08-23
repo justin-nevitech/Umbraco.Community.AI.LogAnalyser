@@ -23,6 +23,9 @@
     <PackageReference Include="Umbraco.AI.OpenAI" Version="18.2.0" />
     <PackageReference Include="Umbraco.AI.Prompt" Version="18.2.3" />
     <PackageReference Include="Umbraco.Cms" Version="18.1.1" />
+    <!-- Required by ModelsBuilder ModelsMode=InMemoryAuto: provides Razor runtime compilation
+         so the front-end views (which use generated PublishedModels) can be compiled. -->
+    <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="18.1.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +50,7 @@
     <!-- Remove RazorCompileOnBuild and RazorCompileOnPublish when not using ModelsMode InMemoryAuto -->
     <RazorCompileOnBuild>false</RazorCompileOnBuild>
     <RazorCompileOnPublish>false</RazorCompileOnPublish>
+    <UserSecretsId>a9970d43-4430-4bb7-a48d-de087b073e1b</UserSecretsId>
   </PropertyGroup>
 
 </Project>
