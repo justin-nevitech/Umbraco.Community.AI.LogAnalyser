@@ -1,0 +1,52 @@
+<Project>
+
+  <!--
+    Imported by BOTH wrapper package projects (.v17 and .v18), neither of which has sources
+    or assets of its own.
+
+    The built backoffice assets (wwwroot/App_Plugins) live in the shared source directory
+    (Umbraco.Community.AI.LogAnalyser) alongside the shared C# sources. They cannot simply be <Content Include>d from there with Link
+    metadata, because of how the SDK discovers static web assets:
+
+        ResolveProjectStaticWebAssets calls DefineStaticWebAssets with:
+            CandidateAssets   = @(Content) matching "wwwroot/**"
+            ContentRoot       = $(MSBuildProjectDirectory)\wwwroot\    (hardcoded)
+
+    A linked file matches the pattern but is then recorded against THIS project's wwwroot,
+    which would not exist - producing a development manifest that points at a missing
+    directory, so the site fails at startup with DirectoryNotFoundException from
+    StaticWebAssetsLoader.
+
+    So the assets are mirrored into this project's own wwwroot, giving the pipeline a real
+    directory that matches the content root it records. The mirrored folder is build output
+    and is git-ignored.
+
+    The mirror runs at two points because the candidate @(Content) items come from the default
+    item globs, which are expanded during project EVALUATION - before any target runs:
+
+      * after Restore, so that the build-phase evaluation of a cold build (fresh clone or
+        cleaned tree, where the folder does not exist yet) already sees the files;
+      * before ResolveProjectStaticWebAssets, to keep the mirror current within a build when
+        the client assets have been rebuilt.
+  -->
+
+  <Target Name="MirrorSharedBackofficeAssets"
+          AfterTargets="Restore"
+          BeforeTargets="ResolveProjectStaticWebAssets">
+
+    <Error Condition="'$(LogAnalyserSharedDir)' == ''"
+           Text="LogAnalyserSharedDir is not set. SharedBackofficeAssets.targets must be imported after LogAnalyser.Shared.props." />
+
+    <ItemGroup>
+      <_LogAnalyserSharedAsset Include="$(LogAnalyserSharedDir)wwwroot\**\*" />
+    </ItemGroup>
+
+    <Error Condition="'@(_LogAnalyserSharedAsset)' == ''"
+           Text="No backoffice assets found in $(LogAnalyserSharedDir)wwwroot. Build the TypeScript client first (cd Client &amp;&amp; npm run build)." />
+
+    <Copy SourceFiles="@(_LogAnalyserSharedAsset)"
+          DestinationFiles="@(_LogAnalyserSharedAsset->'$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

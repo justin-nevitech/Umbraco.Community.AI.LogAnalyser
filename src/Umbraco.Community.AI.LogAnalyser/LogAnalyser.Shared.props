@@ -1,0 +1,89 @@
+<Project>
+
+  <!--
+    Shared definition for the two package projects that build this component:
+
+      Umbraco.Community.AI.LogAnalyser.v17\...v17.csproj  -> Umbraco 17
+      Umbraco.Community.AI.LogAnalyser.v18\...v18.csproj  -> Umbraco 18
+
+    This directory (Umbraco.Community.AI.LogAnalyser) is NOT a project. It is the single
+    home for the shared C# sources, the TypeScript client and the built backoffice assets.
+    The two wrapper projects above compile these files and produce the same assembly name
+    and PackageId; only the Umbraco/Umbraco.AI package ranges and the UMBRACO_18
+    compilation symbol differ.
+
+    Why two project files rather than one project with a build switch: Umbraco 18 removed
+    Swashbuckle, so the OpenAPI registration in Composers\AILogAnalyserApiComposer.cs must
+    be compiled differently per major (#if UMBRACO_18). A single project could only express
+    that with an MSBuild property, and NuGet restore evaluates each project once with its
+    default properties - so one solution could never restore it at both majors at the same
+    time, and the v17 and v18 test sites could not coexist in the solution. Two project
+    files give each major its own restore, so both test sites build and run side by side.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
+    <RootNamespace>Umbraco.Community.AI.LogAnalyser</RootNamespace>
+    <AssemblyName>Umbraco.Community.AI.LogAnalyser</AssemblyName>
+
+    <!--
+      Only the COMPILE globs are replaced (the sources are shared from this directory and the
+      default glob is relative to each project's own folder). Default Content/None items stay
+      enabled: the Razor SDK's static web asset discovery is driven by them, so disabling all
+      default items silently drops wwwroot/App_Plugins from the produced package.
+    -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <!-- Directory holding the shared sources and the built backoffice assets. Each wrapper
+         project mirrors wwwroot into its own folder - see SharedBackofficeAssets.targets. -->
+    <LogAnalyserSharedDir>$(MSBuildThisFileDirectory)</LogAnalyserSharedDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>Umbraco.Community.AI.LogAnalyser</Product>
+    <PackageId>Umbraco.Community.AI.LogAnalyser</PackageId>
+    <Title>AI Log Analyser</Title>
+    <Description>Adds AI-powered log analysis to the Umbraco backoffice log viewer. Analyse any log entry with one click using your configured AI provider via Umbraco.AI.</Description>
+    <PackageTags>umbraco;umbraco-marketplace</PackageTags>
+    <Authors>Justin Neville</Authors>
+    <Company>Nevitech IT Solutions Ltd</Company>
+    <Copyright>$([System.DateTime]::UtcNow.ToString(`yyyy`)) © Justin Neville</Copyright>
+    <PackageProjectUrl>https://github.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/justin-nevitech/Umbraco.Community.AI.LogAnalyser</RepositoryUrl>
+    <PackageReadmeFile>README_nuget.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <!-- Shared C# sources. The Client folder (TypeScript) and build output are excluded. -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)**\*.cs"
+             Exclude="$(MSBuildThisFileDirectory)bin\**\*.cs;$(MSBuildThisFileDirectory)obj\**\*.cs;$(MSBuildThisFileDirectory)Client\**\*.cs" />
+  </ItemGroup>
+
+  <!-- Keep the TypeScript client's manifest visible in the IDE without packing it (the built
+       copy under wwwroot/App_Plugins is what ships). -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)Client\public\umbraco-package.json"
+          Link="Client\umbraco-package.json" Pack="false" />
+  </ItemGroup>
+
+  <!-- Pure helpers on the services (filtering, formatting, truncation) stay internal rather than
+       public API, but need to be reachable from the test suite. Both test wrappers compile the
+       same shared test sources, so both assembly names are granted access. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.AI.LogAnalyser.Tests.v17" />
+    <InternalsVisibleTo Include="Umbraco.Community.AI.LogAnalyser.Tests.v18" />
+  </ItemGroup>
+
+  <!-- Packaged docs. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\..\docs\README_nuget.md" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\docs\icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

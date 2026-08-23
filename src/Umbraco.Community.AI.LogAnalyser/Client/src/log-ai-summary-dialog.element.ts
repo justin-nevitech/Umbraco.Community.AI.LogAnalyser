@@ -179,11 +179,29 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
       border-radius: 4px;
       font-size: 13px;
     }
+
+    .snarky-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+      background: var(--uui-color-warning, #f0ac00);
+      color: var(--uui-color-warning-contrast, #000);
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .snarky-banner uui-icon {
+      flex-shrink: 0;
+    }
   `;
 
   @state() private _summary = '';
   @state() private _loading = true;
   @state() private _error = '';
+  @state() private _snarky = false;
 
   private _abortController?: AbortController;
 
@@ -197,7 +215,7 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
     this._abortController?.abort();
   }
 
-  private _fetchSummary = async () => {
+  private _fetchSummary = async (snarkyOverride?: boolean) => {
     this._abortController?.abort();
     this._abortController = new AbortController();
 
@@ -228,6 +246,8 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
             messageTemplate: this.data?.messageTemplate || undefined,
             exception: this.data?.exception || undefined,
             properties: this.data?.properties || undefined,
+            // Omitted when undefined so the backend falls back to its configured default.
+            snarky: snarkyOverride,
           }),
           signal: this._abortController.signal,
         },
@@ -242,6 +262,7 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
 
       const result = await response.json();
       this._summary = result.summary ?? '';
+      this._snarky = result.snarky ?? false;
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
       this._error =
@@ -261,6 +282,17 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
     return html`
       <uui-dialog-layout headline="AI Log Analysis">
         <div class="content-wrapper">
+          ${this._snarky
+            ? html`
+                <div class="snarky-banner">
+                  <uui-icon name="icon-alert"></uui-icon>
+                  <span
+                    >Snarky mode is on — the AI is being deliberately cheeky and
+                    condescending. The technical details are still accurate.</span
+                  >
+                </div>
+              `
+            : nothing}
           <div class="log-section">
             <div class="log-meta">
           ${this.data?.level
@@ -302,13 +334,26 @@ export default class LogAiSummaryDialogElement extends UmbModalBaseElement<LogAi
           </div>
         </div>
 
+        ${!this._loading && !this._error && this._snarky
+          ? html`
+              <uui-button
+                slot="actions"
+                look="secondary"
+                label="Re-analyse without snark"
+                @click=${() => this._fetchSummary(false)}
+              >
+                <uui-icon name="icon-wand"></uui-icon>
+                Re-analyse without snark
+              </uui-button>
+            `
+          : nothing}
         ${!this._loading && !this._error
           ? html`
               <uui-button
                 slot="actions"
                 look="secondary"
                 label="Re-analyse"
-                @click=${this._fetchSummary}
+                @click=${() => this._fetchSummary()}
               >
                 <uui-icon name="icon-refresh"></uui-icon>
                 Re-analyse

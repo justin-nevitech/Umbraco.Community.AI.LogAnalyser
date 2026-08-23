@@ -355,3 +355,8 @@ MigrationBackup/
 # Rider
 src/.idea
 .claude/settings.local.json
+
+# Mirrored backoffice assets for the package variants (build output; the source of
+# truth is src/Umbraco.Community.AI.LogAnalyser/wwwroot)
+src/Umbraco.Community.AI.LogAnalyser.v17/wwwroot/
+src/Umbraco.Community.AI.LogAnalyser.v18/wwwroot/

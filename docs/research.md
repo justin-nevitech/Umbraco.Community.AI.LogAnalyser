@@ -20,11 +20,11 @@ This document explains the key technical decisions behind the AI.LogAnalyser imp
 
 **Alternative considered**: JSON-structured responses parsed into UI sections. Rejected because it would require prompt complexity to ensure valid JSON, error handling for malformed responses, and would break if the AI returns free-text. Markdown is more resilient — even a poorly formatted response is still readable.
 
-### System Prompt Separation
+### System Prompt Separation (and a cache-friendly prefix)
 
-**Decision**: The system prompt is sent as a `ChatRole.System` message, and the user prompt (log entry + context) as a `ChatRole.User` message.
+**Decision**: All *static* content — the persona, behaviour/security constraints, the response-format instructions, and the system diagnostics — is sent as a single `ChatRole.System` message. Only the *variable* content (the log entry, surrounding entries, and frequency note) is sent as the `ChatRole.User` message.
 
-**Rationale**: Separating roles gives the AI model clear instruction boundaries. The system message establishes the persona ("expert Umbraco CMS diagnostics assistant") and behavior constraints ("be concise, technical, and actionable"), while the user message contains only the data to analyse. This is the standard pattern recommended by all major AI providers for consistent behavior.
+**Rationale**: Separating roles gives the model clear instruction boundaries, and concentrating everything static into one stable prefix makes it cacheable. Providers that support prompt caching (e.g. OpenAI's automatic prefix caching, Anthropic's explicit caching) can then bill the repeated prefix at a fraction of the cost and respond faster (lower time-to-first-token) when several entries are analysed in a session. The system-diagnostics block is identical for the life of the process and the instructions never change, so they belong in the prefix; the log data is the only thing that varies per request, so it is the only thing in the user message. (The small data-dependent guidance lines — "use the surrounding entries", "consider the frequency" — sit with the data in the user message; any optional tone addendum is appended last so it never breaks the cacheable prefix.)
 
 ### Umbraco-Specific System Prompt
 
@@ -78,21 +78,21 @@ This document explains the key technical decisions behind the AI.LogAnalyser imp
 
 ### What's Included
 
-**Decision**: Send Umbraco version, .NET runtime, OS, database provider, environment name, hosting model, ModelsBuilder mode, application start time, and non-framework assembly names/versions to the AI provider.
+**Decision**: Send Umbraco version, .NET runtime, OS, database provider, environment name, hosting model, ModelsBuilder mode, application start time, and a *focused* list of installed packages and versions. The package list is restricted to diagnostically-relevant assemblies — anything Umbraco-related (any name containing "umbraco"), the application's own assembly, and a curated set of commonly-implicated infrastructure (search, database, email, imaging, bundling, cache, background jobs, via the `RelevantAssemblyPrefixes` allowlist) — and a package's many same-version sub-assemblies are collapsed into a single line (e.g. `Umbraco.AI.Agent.* 1.10.4 (9 assemblies)`).
 
-**Rationale**: Many Umbraco errors are environment-specific. A `SqlException` on SQLite requires different advice than one on SQL Server. An error on Azure App Service might relate to connection limits that don't apply on Kestrel. Assembly versions reveal package conflicts (e.g., an old version of Examine alongside a new Umbraco core). Without this context, the AI gives generic advice; with it, the AI can reference the specific Umbraco version's known issues.
+**Rationale**: Many Umbraco errors are environment-specific. A `SqlException` on SQLite requires different advice than one on SQL Server; an error on Azure App Service might relate to connection limits that don't apply on Kestrel; package versions reveal conflicts (e.g. an old Examine alongside a new Umbraco core). But the full loaded-assembly inventory is ~180 entries on a real site — overwhelmingly transitive dependencies that are version-locked to the CMS and carry no independent diagnostic value, while dominating the prompt's token count. Restricting to the relevant subset and collapsing sub-assembly families keeps the genuinely useful signal (which add-ons/providers and versions are installed) while cutting the list to ~40 lines. Anything excluded still surfaces in the exception stack trace when it actually throws.
 
 ### What's Excluded
 
-**Decision**: Framework assemblies (`System.*`, `Microsoft.Extensions.*`, etc.) are filtered from the assembly list. Connection strings are not sent — only the inferred provider type ("SQLite", "SQL Server").
+**Decision**: Everything outside the relevant-package allowlist is excluded — framework assemblies (`System.*`, `Microsoft.*`), cloud-provider SDKs (`AWSSDK.*`, `Azure.*`, `Google.Apis.*`), and serialisation/compression internals (`MessagePack`, etc.). `Serilog.*` and `Lucene.Net.*` are also left out as high-line-count / low-marginal-value families (the allowlist is a single, easily-extended constant if you want them). Connection strings are never sent — only the inferred provider type ("SQLite", "SQL Server").
 
-**Rationale**: Framework assemblies add noise without diagnostic value — every Umbraco site has them and their versions are determined by the .NET runtime. Connection strings would leak credentials to the AI provider, which is unacceptable. Inferring "SQLite" vs "SQL Server" from the connection string format gives the AI enough to tailor its advice without leaking infrastructure details.
+**Rationale**: These add noise without diagnostic value — their versions are determined by the CMS/.NET versions and they're rarely consulted when diagnosing a single log entry, yet they would dominate the prompt. Connection strings would leak credentials to the AI provider, which is unacceptable. Inferring "SQLite" vs "SQL Server" from the connection string format gives the AI enough to tailor its advice without leaking infrastructure details.
 
 ### Lazy Initialisation
 
 **Decision**: `SystemDiagnosticsProvider` is a singleton with `Lazy<string>` initialisation.
 
-**Rationale**: System context (Umbraco version, loaded assemblies, hosting model) doesn't change during the application's lifetime. Building it once and caching avoids redundant reflection and environment variable lookups on every request. The `Lazy<T>` wrapper ensures thread safety without explicit locking — the first call triggers `BuildContext`, and all subsequent calls return the cached string.
+**Rationale**: System context (Umbraco version, installed packages, hosting model) doesn't change during the application's lifetime. Building it once and caching avoids redundant reflection and environment variable lookups on every request. The `Lazy<T>` wrapper ensures thread safety without explicit locking — the first call triggers `BuildContext`, and all subsequent calls return the cached string.
 
 ### Hosting Model Detection
 
@@ -102,9 +102,9 @@ This document explains the key technical decisions behind the AI.LogAnalyser imp
 
 ## Field Truncation
 
-**Decision**: Exception and Properties fields are truncated to 8192 characters. Message and MessageTemplate are not truncated.
+**Decision**: The Exception field is truncated to 8192 characters and the Properties field to 2048. Message and MessageTemplate are also capped at 8192 but are rarely that long.
 
-**Rationale**: Stack traces and serialised property bags can be enormous (multi-MB in extreme cases), which would blow out AI token limits and increase costs. 8 KB captures the full exception type, message, and several hundred frames of stack trace — more than enough for diagnosis. The truncation marker (`... [truncated]`) tells the AI that information was cut. Message and MessageTemplate are typically short (under 1 KB) and are the primary diagnostic data, so truncating them would harm analysis quality.
+**Rationale**: Stack traces and serialised property bags can be enormous (multi-MB in extreme cases), which would blow out AI token limits and increase costs. 8 KB captures the full exception type, message, and several hundred frames of stack trace — more than enough for diagnosis. Properties (Serilog structured key/values) get a tighter 2 KB cap: they are frequently the largest field but the lowest-signal compared to the message and exception, so a smaller cap trims tokens with little impact on analysis quality. The truncation marker (`... [truncated]`) tells the AI that information was cut. Message and MessageTemplate are the primary diagnostic data and are typically short, so their cap rarely bites.
 
 ## Frontend Architecture
 
@@ -198,3 +198,11 @@ This document explains the key technical decisions behind the AI.LogAnalyser imp
 | `SurroundingWindowMinutes` | 5 | Balances relevance (entries close in time) with coverage. Entries from 30 minutes ago are rarely relevant to a specific error. |
 | `FrequencyMaxScan` | 500 | Limits the log query to prevent performance degradation on high-volume sites. 500 entries at typical log rates covers several hours. |
 | `FrequencyWindowMinutes` | 60 | One hour is the natural "is this a recurring problem?" window. Shorter windows miss intermittent issues; longer windows dilute the signal. |
+
+## Dual-Major Packaging (Umbraco 17 / 18)
+
+**Decision**: Build both the Umbraco 17 and 18 variants from one set of sources using **two thin wrapper projects** (`Umbraco.Community.AI.LogAnalyser.v17` / `.v18`) that compile the same shared source folder, and ship them as a **version-aligned single PackageId** (the package major tracks the Umbraco major: 17.x → Umbraco `[17,18)`, 18.x → `[18,19)`).
+
+**Rationale**: Umbraco 18 removed Swashbuckle, so the OpenAPI registration genuinely differs between majors (isolated behind `#if UMBRACO_18`). Because both majors run on `net10.0`, TFM-based multi-targeting can't carry the difference, and a single binary that runs on both would need fragile runtime reflection or a bait-and-switch assembly trick. A single project with an `-p:UmbracoMajor=` switch was tried and abandoned — NuGet restore evaluates each project once with its default properties, so one solution could not restore it at both majors, and the two test sites could not coexist. Two wrapper projects give each major its own restore while keeping exactly one copy of the sources. Version-aligned packaging is the idiomatic Umbraco-community approach for a clean major break: one codebase, one PackageId, and a package major that maps to the consumer's Umbraco major.
+
+**Trade-off**: There isn't a single installable artifact for both majors — consumers must install the package major that matches their Umbraco. Crucially, **NuGet does not pick it for them**: a bare `dotnet add package` resolves the highest version published overall, so an Umbraco 17 site would pull the `18.x` package and fail with `NU1107`. Both READMEs therefore tell consumers to pin the major (`--version "17.*"` / `"18.*"`). The other historical constraint — `Umbraco.AI` having no Umbraco 18-compatible release — has since been resolved by its own move to version-aligned `17.x`/`18.x` lines. Full mechanics in [BUILDING.md](BUILDING.md).

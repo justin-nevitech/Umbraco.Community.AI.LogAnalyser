@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    Umbraco 17 variant of the package.
+
+    This project owns NO sources of its own: it compiles the shared files in
+    ..\Umbraco.Community.AI.LogAnalyser via LogAnalyser.Shared.props, and produces the same
+    assembly name and PackageId as the Umbraco 18 variant. The only difference between the
+    two variants is:
+
+      * Umbraco / Umbraco.AI package ranges -> [17,18) here, [18,19) in the .v18 project
+      * the UMBRACO_18 compilation symbol, defined only by the .v18 project, which selects
+        the Microsoft.AspNetCore.OpenApi registration in Composers\AILogAnalyserApiComposer.cs
+        (Umbraco 18 removed Swashbuckle)
+
+    Add new source files to Umbraco.Community.AI.LogAnalyser; both variants pick them up
+    automatically.
+
+    This produces the 17.x releases of the package. See docs/BUILDING.md.
+  -->
+
+  <Import Project="..\Umbraco.Community.AI.LogAnalyser\LogAnalyser.Shared.props" />
+  <Import Project="..\Umbraco.Community.AI.LogAnalyser\SharedBackofficeAssets.targets" />
+
+  <!--
+    The 17.4.0 floor is set by Umbraco.AI: the lowest version-aligned Umbraco.AI 17.x release
+    requires Umbraco.Cms.Core 17.4.0. These ranges flow into the packed nuspec.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" Version="[17.4.0, 18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.4.0, 18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Api.Common" Version="[17.4.0, 18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" Version="[17.4.0, 18.0.0)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.AI" Version="[17.1.0, 18.0.0)" />
+  </ItemGroup>
+
+</Project>
