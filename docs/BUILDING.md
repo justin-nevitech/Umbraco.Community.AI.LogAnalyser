@@ -110,6 +110,38 @@ controller declares `[ApiVersion("1.0")]`. The route constraint accepts **both**
 `v1.0` at runtime, so the client's hard-coded `/umbraco/ailoganalyser/api/v1.0/analyse` works
 on both. Keep it in mind if you regenerate the client from either document.
 
+## Tests
+
+The test suite mirrors the package layout. `src/Umbraco.Community.AI.LogAnalyser.Tests` is a
+**shared source folder, not a project**; two wrapper projects compile the same test files against
+their respective package variant:
+
+| Project | Compiles against | Symbol |
+| ------- | ---------------- | ------ |
+| `src/Umbraco.Community.AI.LogAnalyser.Tests.v17` | `Umbraco.Community.AI.LogAnalyser.v17` | — |
+| `src/Umbraco.Community.AI.LogAnalyser.Tests.v18` | `Umbraco.Community.AI.LogAnalyser.v18` | `UMBRACO_18` |
+
+Every test therefore runs on **both** majors, so the `#if UMBRACO_18` branch in the composer is
+actually executed rather than merely compiled. The suite builds clean: the only warnings left in a
+`--no-incremental` build are NuGet vulnerability advisories (`NU1902`/`NU1903`) for packages that
+arrive transitively through Umbraco's own dependency tree. The handful of assertions that only apply to one
+major (for example the Swashbuckle-only `IOperationIdHandler` registration) are guarded with the
+same `#if`, which is why the v17 run reports one more test than the v18 run.
+
+```bash
+dotnet test src/Umbraco.Community.AI.LogAnalyser.sln        # both majors
+dotnet test src/Umbraco.Community.AI.LogAnalyser.Tests.v17  # Umbraco 17 only
+dotnet test src/Umbraco.Community.AI.LogAnalyser.Tests.v18  # Umbraco 18 only
+```
+
+Add new tests to the shared folder; both wrappers pick them up automatically. Pure helpers on the
+services (assembly filtering, family collapsing, connection-string inference) are `internal` rather
+than public API and are granted to both test assemblies by the `InternalsVisibleTo` items in
+`LogAnalyser.Shared.props`.
+
+The release workflow runs the suite for the major being published before it packs, so a failing
+test blocks the push to NuGet.
+
 ## Test sites
 
 Both test sites are in the solution and can run at the same time:

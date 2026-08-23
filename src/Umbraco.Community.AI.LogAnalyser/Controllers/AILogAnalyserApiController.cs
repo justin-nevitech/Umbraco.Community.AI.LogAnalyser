@@ -189,7 +189,17 @@ public class AILogAnalyserApiController : AILogAnalyserApiControllerBase
         try
         {
             var aiStopwatch = Stopwatch.StartNew();
-            var response = await _chatService.GetChatResponseAsync(messages, cancellationToken: ct);
+            // Inline chat API: runs the full Umbraco.AI middleware pipeline (auditing, guardrails,
+            // telemetry, duration tracking). The alias is required and produces a deterministic
+            // chat ID, so this package's analyses are attributable in the audit log rather than
+            // being lumped in with every other ad-hoc completion.
+            var response = await _chatService.GetChatResponseAsync(
+                chat => chat
+                    .WithAlias(Constants.ChatAlias)
+                    .WithName("AI Log Analyser")
+                    .WithDescription("Analyses an Umbraco log entry and returns a summary, likely cause and recommended action."),
+                messages,
+                ct);
             var aiMs = aiStopwatch.ElapsedMilliseconds;
             var totalMs = totalStopwatch.ElapsedMilliseconds;
 

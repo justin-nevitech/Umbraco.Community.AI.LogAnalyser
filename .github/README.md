@@ -1,4 +1,4 @@
-# AI.Log Analyser
+# AI Log Analyser
 
 [![Downloads](https://img.shields.io/nuget/dt/Umbraco.Community.AI.LogAnalyser?color=cc9900)](https://www.nuget.org/packages/Umbraco.Community.AI.LogAnalyser/)
 [![NuGet](https://img.shields.io/nuget/vpre/Umbraco.Community.AI.LogAnalyser?color=0273B3)](https://www.nuget.org/packages/Umbraco.Community.AI.LogAnalyser)
@@ -106,7 +106,7 @@ When you click the AI button, the following information is sent to your configur
 | Structured properties | Key-value pairs from the Serilog log event (truncated to 2 KB) |
 | Surrounding log entries | Configurable entries before and after (default: 10, within a 5-minute window), deduplicated |
 | Error frequency | How many times the exact same message appeared in the last hour (configurable) |
-| Umbraco version | e.g. `17.2.2` |
+| Umbraco version | e.g. `17.4.0` |
 | .NET runtime version | e.g. `.NET 10.0.0` |
 | Operating system | e.g. `Windows 11`, `Linux 6.x` |
 | Environment name | `Development`, `Staging`, `Production` |

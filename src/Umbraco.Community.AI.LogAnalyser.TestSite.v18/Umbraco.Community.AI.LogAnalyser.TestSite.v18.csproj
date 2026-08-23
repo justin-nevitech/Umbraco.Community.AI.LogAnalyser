@@ -8,8 +8,8 @@
 
   <!--
     Umbraco 18 test site. Mirrors TestSite.v17 but on the Umbraco 18 package line, and
-    references the package with UmbracoMajor=18 so the v18 code path is exercised end to end.
-    See docs/BUILDING.md.
+    references the .v18 wrapper package project so the UMBRACO_18 code path is exercised end
+    to end. See docs/BUILDING.md.
   -->
   <ItemGroup>
     <PackageReference Include="Clean" Version="8.0.1" />

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the shared test suite against the Umbraco 17 variant of the package.
+    Owns no sources of its own - see ..\Umbraco.Community.AI.LogAnalyser.Tests.
+  -->
+
+  <Import Project="..\Umbraco.Community.AI.LogAnalyser.Tests\LogAnalyser.Tests.Shared.props" />
+
+  <PropertyGroup>
+    <AssemblyName>Umbraco.Community.AI.LogAnalyser.Tests.v17</AssemblyName>
+    <RootNamespace>Umbraco.Community.AI.LogAnalyser.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Umbraco.Community.AI.LogAnalyser.v17\Umbraco.Community.AI.LogAnalyser.v17.csproj" />
+  </ItemGroup>
+
+</Project>

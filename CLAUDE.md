@@ -42,11 +42,20 @@ Test site login: admin@example.com / 1234567890 (SQLite, unattended install). Th
 ### Tests
 ```bash
 cd src
-dotnet test Umbraco.Community.AI.LogAnalyser.Tests              # Run all tests
-dotnet test Umbraco.Community.AI.LogAnalyser.Tests --filter "ClassName~LogContextProviderTests"  # Single test class
-dotnet test Umbraco.Community.AI.LogAnalyser.Tests --filter "Name~GetErrorFrequency"            # Tests matching name
+dotnet test Umbraco.Community.AI.LogAnalyser.sln                 # Both majors
+dotnet test Umbraco.Community.AI.LogAnalyser.Tests.v17           # Umbraco 17 only
+dotnet test Umbraco.Community.AI.LogAnalyser.Tests.v18           # Umbraco 18 only
+dotnet test Umbraco.Community.AI.LogAnalyser.Tests.v17 --filter "ClassName~LogContextProviderTests"  # Single test class
+dotnet test Umbraco.Community.AI.LogAnalyser.Tests.v17 --filter "Name~GetErrorFrequency"            # Tests matching name
 ```
 Uses xUnit, NSubstitute, FluentAssertions.
+
+The test suite mirrors the package layout: `Umbraco.Community.AI.LogAnalyser.Tests` is a **shared
+source folder, not a project**, and the `.v17` / `.v18` wrappers compile the same test files against
+their respective package variant (the `.v18` wrapper defines `UMBRACO_18`). Every test therefore runs
+on both majors, so the `#if UMBRACO_18` branch is executed rather than merely compiled. Add new tests
+to the shared folder; both wrappers pick them up. Pure helpers on the services are `internal` and
+exposed to both test assemblies via `InternalsVisibleTo` in `LogAnalyser.Shared.props`.
 
 ### Package
 ```bash

@@ -11,8 +11,8 @@
       * the UMBRACO_18 compilation symbol, which selects the Microsoft.AspNetCore.OpenApi
         registration in Composers\AILogAnalyserApiComposer.cs (Umbraco 18 removed Swashbuckle)
 
-    Add new source files to the Umbraco.Community.AI.LogAnalyser project; they are picked up
-    here automatically.
+    Add new source files to the Umbraco.Community.AI.LogAnalyser shared source folder; they
+    are picked up here automatically.
 
     This produces the 18.x releases of the package. See docs/BUILDING.md.
   -->

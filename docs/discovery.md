@@ -105,10 +105,10 @@ Final working versions for `net10.0`:
 
 | Package | Version |
 |---------|---------|
-| Microsoft.NET.Test.Sdk | 18.6.0 |
+| Microsoft.NET.Test.Sdk | 18.9.0 |
 | xunit | 2.* |
-| xunit.runner.visualstudio | 3.1.5 |
-| NSubstitute | 5.* |
+| xunit.runner.visualstudio | 4.0.0 |
+| NSubstitute | 6.* |
 | FluentAssertions | 8.* |
 | Microsoft.Extensions.AI | 10.* |
 
@@ -116,9 +116,9 @@ Final working versions for `net10.0`:
 
 **Finding**: Supporting Umbraco 17 and 18 from one codebase needed a non-standard multi-targeting approach.
 
-- **Both majors are `net10.0`**, so the usual TFM-based multi-targeting (`net6.0`/`net8.0`) does not apply. Used a single `UmbracoMajor` MSBuild switch that selects the Umbraco package range and defines `UMBRACO_18`.
+- **Both majors are `net10.0`**, so the usual TFM-based multi-targeting (`net6.0`/`net8.0`) does not apply. An `UmbracoMajor` MSBuild switch on a single project was tried first and abandoned: **NuGet restore evaluates each project once with its default properties**, ignoring `AdditionalProperties` on a `ProjectReference`, so one solution could never restore the project at both majors and the two test sites could not coexist (`NU1107`). The shipped design is instead **two wrapper projects** (`.v17` / `.v18`) that compile the same shared sources from `src/Umbraco.Community.AI.LogAnalyser` (not a project — just a source folder) via `LogAnalyser.Shared.props`; only the Umbraco/Umbraco.AI ranges and the `UMBRACO_18` symbol differ. See [BUILDING.md](BUILDING.md).
 - **Umbraco 18 removed Swashbuckle** for OpenAPI in favour of `Microsoft.AspNetCore.OpenApi`. The types the v17 composer relied on (`SwaggerGenOptions.SwaggerDoc`, `OpenApiInfo`, `BackOfficeSecurityRequirementsOperationFilterBase`, `IOperationIdHandler`/`OperationIdHandler`) are gone. The v18 replacement is `builder.AddBackOfficeOpenApiDocument(name, doc => doc.WithTitle(...).WithBackOfficeAuthentication().ConfigureOpenApiOptions(o => o.AddOperationTransformer(...)))`. This is the only code behind `#if UMBRACO_18`. Exact namespaces were confirmed by reading the `18.0.0-rc1` assembly metadata: `AddBackOfficeOpenApiDocument`/`WithTitle`/`ConfigureOpenApiOptions` live in `Umbraco.Cms.Api.Common.OpenApi`, `WithBackOfficeAuthentication` in `Umbraco.Cms.Api.Management.OpenApi`.
-- **`Umbraco.AI` blocks Umbraco 18 today.** The latest release (`1.14.0`) pins `Umbraco.Cms.Core` to `[17.4.0, 17.999.999)`. The package *project* still compiles in `UmbracoMajor=18` mode because its direct `Umbraco.Cms.*` references out-rank Umbraco.AI's constraint as an `NU1608` warning — but a real Umbraco 18 consumer site (and `TestSite.v18`) fails to restore with a hard `NU1107` conflict (no direct-reference winner). So the 18.x package cannot be published until a v18-compatible `Umbraco.AI` ships. Full details and the steps to finish v18 support are in [BUILDING.md](BUILDING.md).
+- **`Umbraco.AI` once blocked Umbraco 18 — resolved.** Its old `1.x` line pinned `Umbraco.Cms.Core` to `[17.4.0, 17.999.999)`, so an Umbraco 18 consumer site (and `TestSite.v18`) failed to restore with a hard `NU1107` conflict. `Umbraco.AI` has since moved to the same version-aligned convention as this package (`17.x` / `18.x` lines superseding `1.x`), so the 18.x variant now depends on `Umbraco.AI [18.0.0, 19.0.0)` and both majors are publishable. The 17.x floor of `17.4.0` is inherited from the lowest version-aligned `Umbraco.AI` 17.x release.
 
 ## Prompt Token Optimisation
 
@@ -139,7 +139,11 @@ Final working versions for `net10.0`:
 
 ## Test Coverage Summary
 
-89 tests total (all passing):
+153 tests, run against **both** Umbraco majors (152 on v18 — one assertion is Swashbuckle-specific
+and guarded by `#if`). The test sources live once in a shared folder and are compiled by the
+`.v17` / `.v18` wrapper projects, mirroring the package layout.
 
 - **LogContextProviderTests** (31 tests): surrounding log retrieval, current entry exclusion, deduplication (consecutive same level+message, different messages, different levels, after entries), chronological ordering, empty/failed/null responses, max entries, field mapping, cancellation, frequency counting (exact match, case sensitivity, configuration).
-- **AILogAnalyserApiControllerTests** (58 tests): validation, successful analysis, null response handling, optional fields, truncation, surrounding context formatting, frequency notes, timestamp handling, graceful degradation, system diagnostics, AI failure → 502, prompt structure (roles, headings, message count), and configurable per-request prompt options.
+- **AILogAnalyserApiControllerTests** (60 tests): validation, successful analysis, null response handling, optional fields, truncation, surrounding context formatting, frequency notes, timestamp handling, graceful degradation, system diagnostics, AI failure → 502, prompt structure (roles, headings, message count), and configurable per-request prompt options.
+- **SystemDiagnosticsProviderTests** (53 tests): environment facts, ModelsBuilder mode presence/absence, `Lazy<string>` caching, connection-string redaction (the provider name is reported, the credentials never are), provider inference for SQLite/SQL Server/unknown, the relevant-package allowlist (kept vs. dropped families, entry-assembly matching), build-metadata stripping, and family collapsing (same-version sub-assemblies collapse, differing versions do not).
+- **AILogAnalyserApiComposerTests** (9 tests): DI registrations and their lifetimes, settings binding and defaults, the inline-chat alias guard, and the OpenAPI registration — the last of which is the only `#if UMBRACO_18` branch, so running the suite from both wrappers exercises Swashbuckle on 17 and `Microsoft.AspNetCore.OpenApi` on 18.

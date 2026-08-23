@@ -564,7 +564,8 @@ public class LogContextProviderTests
             Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(),
             Arg.Any<int>(), Arg.Any<int>(),
             orderDirection: direction)
-            .Returns(Attempt.SucceedWithStatus(LogViewerOperationStatus.Success, paged));
+            .Returns(Attempt.SucceedWithStatus<PagedModel<ILogEntry>?, LogViewerOperationStatus>(
+                LogViewerOperationStatus.Success, paged));
     }
 
     private void SetupFailedPagedLogs(Direction direction)
@@ -573,7 +574,8 @@ public class LogContextProviderTests
             Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(),
             Arg.Any<int>(), Arg.Any<int>(),
             orderDirection: direction)
-            .Returns(Attempt.FailWithStatus(LogViewerOperationStatus.CancelledByLogsSizeValidation, new PagedModel<ILogEntry>(0, [])));
+            .Returns(Attempt.FailWithStatus<PagedModel<ILogEntry>?, LogViewerOperationStatus>(
+                LogViewerOperationStatus.CancelledByLogsSizeValidation, new PagedModel<ILogEntry>(0, [])));
     }
 
     private void SetupNullResultPagedLogs(Direction direction)
@@ -592,7 +594,8 @@ public class LogContextProviderTests
             Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(),
             Arg.Any<int>(), Arg.Any<int>(),
             orderDirection: Direction.Descending)
-            .Returns(Attempt.SucceedWithStatus(LogViewerOperationStatus.Success, paged));
+            .Returns(Attempt.SucceedWithStatus<PagedModel<ILogEntry>?, LogViewerOperationStatus>(
+                LogViewerOperationStatus.Success, paged));
     }
 
     #endregion

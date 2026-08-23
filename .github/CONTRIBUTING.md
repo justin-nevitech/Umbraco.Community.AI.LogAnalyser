@@ -34,6 +34,19 @@ npm run build
 
 The built output goes to `src/Umbraco.Community.AI.LogAnalyser/wwwroot/App_Plugins/Umbraco.Community.AI.LogAnalyser/`.
 
+### Running the Tests
+
+```bash
+cd src
+dotnet test Umbraco.Community.AI.LogAnalyser.sln        # both majors
+dotnet test Umbraco.Community.AI.LogAnalyser.Tests.v17  # Umbraco 17 only
+dotnet test Umbraco.Community.AI.LogAnalyser.Tests.v18  # Umbraco 18 only
+```
+
+The test sources live once in `src/Umbraco.Community.AI.LogAnalyser.Tests` (a shared folder, not a
+project) and are compiled by both wrapper test projects, so every test runs against both Umbraco
+majors. Add new tests there and both pick them up.
+
 ## Project Structure
 
 ```
@@ -51,7 +64,9 @@ src/
     wwwroot/                         # Built static assets
   Umbraco.Community.AI.LogAnalyser.v17/                # Umbraco 17 package variant (wrapper, no sources)
   Umbraco.Community.AI.LogAnalyser.v18/                # Umbraco 18 package variant (wrapper, no sources)
-  Umbraco.Community.AI.LogAnalyser.Tests/              # Unit tests (xUnit)
+  Umbraco.Community.AI.LogAnalyser.Tests/              # Shared test sources (NOT a project - no .csproj)
+  Umbraco.Community.AI.LogAnalyser.Tests.v17/          # Runs the suite against the Umbraco 17 package
+  Umbraco.Community.AI.LogAnalyser.Tests.v18/          # Runs the suite against the Umbraco 18 package
   Umbraco.Community.AI.LogAnalyser.TestSite.v17/       # Umbraco 17 test site (https://localhost:44300)
   Umbraco.Community.AI.LogAnalyser.TestSite.v18/       # Umbraco 18 test site (https://localhost:44301)
 ```

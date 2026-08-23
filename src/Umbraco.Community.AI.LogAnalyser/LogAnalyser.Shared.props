@@ -72,6 +72,14 @@
           Link="Client\umbraco-package.json" Pack="false" />
   </ItemGroup>
 
+  <!-- Pure helpers on the services (filtering, formatting, truncation) stay internal rather than
+       public API, but need to be reachable from the test suite. Both test wrappers compile the
+       same shared test sources, so both assembly names are granted access. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.AI.LogAnalyser.Tests.v17" />
+    <InternalsVisibleTo Include="Umbraco.Community.AI.LogAnalyser.Tests.v18" />
+  </ItemGroup>
+
   <!-- Packaged docs. -->
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\..\docs\README_nuget.md" Pack="true" PackagePath="\" />

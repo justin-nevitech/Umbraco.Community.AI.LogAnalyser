@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Umbraco.AI.Core.Chat;
+using Umbraco.AI.Core.InlineChat;
 using Xunit;
 
 namespace Umbraco.Community.AI.LogAnalyser.Tests.Controllers;
@@ -152,9 +153,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("Failed to load item {ItemId}"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -172,9 +174,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("System.NullReferenceException"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -192,9 +195,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("abc-123"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -207,9 +211,10 @@ public class AILogAnalyserApiControllerTests
         await sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Role == ChatRole.System && m.Text != null && m.Text.Contains("snarky"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -221,9 +226,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("snarky"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -252,9 +258,10 @@ public class AILogAnalyserApiControllerTests
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().BeOfType<LogAnalyserResponse>().Subject.Snarky.Should().BeFalse();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("snarky"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -268,9 +275,10 @@ public class AILogAnalyserApiControllerTests
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().BeOfType<LogAnalyserResponse>().Subject.Snarky.Should().BeFalse();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("snarky"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -297,10 +305,11 @@ public class AILogAnalyserApiControllerTests
 
         // The addendum must start on its own line, not run on from the closing ``` fence.
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Role == ChatRole.System && m.Text != null
                     && m.Text.Contains("```\n\nAdopt a deeply snarky", StringComparison.Ordinal))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -323,9 +332,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("[truncated]"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -344,9 +354,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("[truncated]"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -365,9 +376,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains(shortException) && !m.Text.Contains("[truncated]"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -415,12 +427,13 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null
                     && m.Text.Contains("Request started")
                     && m.Text.Contains("Request failed")
                     && m.Text.Contains("Surrounding log entries"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -438,9 +451,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("appeared 5 times"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -458,9 +472,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("recurring/systemic issue"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -478,9 +493,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Error frequency"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -546,9 +562,10 @@ public class AILogAnalyserApiControllerTests
 
         result.Should().BeOfType<OkObjectResult>();
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("Umbraco: 17.2.2"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -558,7 +575,8 @@ public class AILogAnalyserApiControllerTests
     [Fact]
     public async Task Analyse_Returns502_WhenAiServiceThrows()
     {
-        _chatService.GetChatResponseAsync(Arg.Any<IList<ChatMessage>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _chatService.GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(), Arg.Any<IList<ChatMessage>>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Provider timeout"));
         var request = CreateValidRequest();
 
@@ -571,7 +589,8 @@ public class AILogAnalyserApiControllerTests
     [Fact]
     public async Task Analyse_Returns502_WithHelpfulMessage()
     {
-        _chatService.GetChatResponseAsync(Arg.Any<IList<ChatMessage>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _chatService.GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(), Arg.Any<IList<ChatMessage>>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Connection refused"));
         var request = CreateValidRequest();
 
@@ -595,11 +614,12 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs[0].Role == ChatRole.System
                 && msgs[0].Text != null
                 && msgs[0].Text.Contains("expert Umbraco CMS diagnostics assistant")),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -616,12 +636,13 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs[1].Role == ChatRole.User
                 && msgs[1].Text != null
                 && msgs[1].Text.Contains("Level: Error")
                 && msgs[1].Text.Contains("Failed to resolve content")),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -633,12 +654,13 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null
                     && m.Text.Contains("## Summary")
                     && m.Text.Contains("## Cause")
                     && m.Text.Contains("## Recommended action"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -650,8 +672,9 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs => msgs.Count == 2),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -675,9 +698,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("entries before (oldest first)"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -697,9 +721,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("entries after (oldest first)"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -719,9 +744,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("(x5)"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -747,11 +773,12 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null
                     && m.Text.Contains("Exception: System.Exception: boom")
                     && !m.Text.Contains("at Foo.Bar()"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -767,9 +794,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Surrounding log entries"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -789,9 +817,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("SELECTED LOG ENTRY"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -811,9 +840,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("Single") && !m.Text.Contains("(x1)"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -835,9 +865,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && !m.Text.Contains("[truncated]"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -855,9 +886,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("[truncated]"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -877,11 +909,12 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null
                     && m.Text.Contains("appeared 10 times")
                     && !m.Text.Contains("recurring/systemic issue"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -897,9 +930,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("recurring/systemic issue"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -915,9 +949,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("appeared 2 times"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -933,9 +968,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Error frequency"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -992,9 +1028,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("Timestamp: 2025-06-15T12:00:00Z"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1011,9 +1048,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Timestamp:"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -1034,9 +1072,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Exception:"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1053,9 +1092,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Properties:"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1072,9 +1112,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Message template:"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -1107,6 +1148,7 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null
                     && m.Text.Contains("Level: Error")
@@ -1117,7 +1159,7 @@ public class AILogAnalyserApiControllerTests
                     && m.Text.Contains("Properties: Handler: ContentController")
                     && m.Text.Contains("appeared 3 times")
                     && m.Text.Contains("Surrounding log entries"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -1141,9 +1183,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("Use the surrounding log entries to understand"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1159,9 +1202,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.All(m => m.Text == null || !m.Text.Contains("Use the surrounding log entries"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -1177,9 +1221,10 @@ public class AILogAnalyserApiControllerTests
         await _sut.Analyse(request, CancellationToken.None);
 
         await _chatService.Received(1).GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(),
             Arg.Is<IList<ChatMessage>>(msgs =>
                 msgs.Any(m => m.Text != null && m.Text.Contains("Consider the error frequency"))),
-            cancellationToken: Arg.Any<CancellationToken>());
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -1197,7 +1242,8 @@ public class AILogAnalyserApiControllerTests
     {
         var assistantMessage = new ChatMessage(ChatRole.Assistant, text);
         var completion = new ChatResponse(assistantMessage);
-        _chatService.GetChatResponseAsync(Arg.Any<IList<ChatMessage>>(), cancellationToken: Arg.Any<CancellationToken>())
+        _chatService.GetChatResponseAsync(
+            Arg.Any<Action<AIChatBuilder>>(), Arg.Any<IList<ChatMessage>>(), Arg.Any<CancellationToken>())
             .Returns(completion);
     }
 

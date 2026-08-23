@@ -45,7 +45,7 @@ Then navigate to **Settings > Log Viewer > Search** in the backoffice and click 
 - Structured response with summary, likely cause and recommended action
 - Includes surrounding log entries for sequence-of-events context
 - Detects error frequency to distinguish one-off vs systemic issues
-- Includes system diagnostics (Umbraco version, .NET, OS, database provider, hosting model, assemblies) for environment-aware analysis
+- Includes system diagnostics (Umbraco version, .NET, OS, database provider, hosting model, and a focused list of relevant installed packages) for environment-aware analysis
 - Logs performance diagnostics (context gathering time, AI response time) to the Umbraco log
 - Renders responses as formatted markdown
 - Works with any AI provider configured via Umbraco.AI

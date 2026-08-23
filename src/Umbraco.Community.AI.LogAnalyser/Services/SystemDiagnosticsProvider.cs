@@ -77,23 +77,31 @@ public class SystemDiagnosticsProvider : ISystemDiagnosticsProvider
         var process = Process.GetCurrentProcess();
         sb.AppendLine($"Application started: {process.StartTime:O}");
 
-        // Only surface diagnostically-relevant packages: anything Umbraco-related (any assembly
-        // whose name contains "umbraco"), other relevant add-ons (uSync), plus the application's
-        // own assembly. The long tail of transitive dependencies (cloud SDKs, Lucene internals,
-        // serialisation libraries, etc.) is version-locked to the CMS, is rarely consulted when
-        // diagnosing a single log entry, and would otherwise dominate the prompt — so it's
-        // excluded to keep the request small and fast.
-        var entryAssemblyName = Assembly.GetEntryAssembly()?.GetName().Name;
-
-        sb.AppendLine("Installed packages:");
-        var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+        var loaded = AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => !a.IsDynamic)
             .Select(a => (Name: a.GetName().Name ?? "", Version: a.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                ?? a.GetName().Version?.ToString() ?? "?"))
-            .Where(a => !string.IsNullOrEmpty(a.Name)
-                && (a.Name.Contains("umbraco", StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(a.Name, entryAssemblyName, StringComparison.Ordinal)
-                    || RelevantAssemblyPrefixes.Any(p => a.Name.StartsWith(p, StringComparison.Ordinal))))
+                ?? a.GetName().Version?.ToString() ?? "?"));
+
+        sb.Append(FormatInstalledPackages(loaded, Assembly.GetEntryAssembly()?.GetName().Name));
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Filters the loaded assemblies down to the diagnostically-relevant ones and renders them as
+    /// the "Installed packages:" block. Kept separate from <see cref="BuildContext"/> (and from
+    /// the reflection that feeds it) so the filtering and collapsing rules can be unit tested
+    /// against a fixed assembly list.
+    /// </summary>
+    internal static string FormatInstalledPackages(
+        IEnumerable<(string Name, string Version)> loadedAssemblies,
+        string? entryAssemblyName)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("Installed packages:");
+
+        var assemblies = loadedAssemblies
+            .Where(a => !string.IsNullOrEmpty(a.Name) && IsRelevant(a.Name, entryAssemblyName))
             .Select(a => (a.Name, Version: CleanVersion(a.Version)))
             .ToList();
 
@@ -119,19 +127,30 @@ public class SystemDiagnosticsProvider : ISystemDiagnosticsProvider
         return sb.ToString();
     }
 
+    // Only surface diagnostically-relevant packages: anything Umbraco-related (any assembly whose
+    // name contains "umbraco"), the application's own assembly, and the curated infrastructure
+    // allowlist. The long tail of transitive dependencies (cloud SDKs, Lucene internals,
+    // serialisation libraries, etc.) is version-locked to the CMS, is rarely consulted when
+    // diagnosing a single log entry, and would otherwise dominate the prompt — so it's excluded
+    // to keep the request small and fast.
+    internal static bool IsRelevant(string name, string? entryAssemblyName) =>
+        name.Contains("umbraco", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(name, entryAssemblyName, StringComparison.Ordinal)
+        || RelevantAssemblyPrefixes.Any(p => name.StartsWith(p, StringComparison.Ordinal));
+
     // The package-family key used to collapse sub-assemblies: the first three dot-separated
     // segments (or the whole name when it has three or fewer).
-    private static string FamilyRoot(string name)
+    internal static string FamilyRoot(string name)
     {
         var parts = name.Split('.');
         return parts.Length <= 3 ? name : string.Join('.', parts[..3]);
     }
 
     // Strips build metadata (the '+sha' suffix) from an informational version.
-    private static string CleanVersion(string version) =>
+    internal static string CleanVersion(string version) =>
         version.Contains('+') ? version[..version.IndexOf('+')] : version;
 
-    private static string InferDatabaseProvider(string connectionString)
+    internal static string InferDatabaseProvider(string connectionString)
     {
         if (string.IsNullOrEmpty(connectionString))
             return "Unknown";
